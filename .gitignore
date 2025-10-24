@@ -1,0 +1,56 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Config files (contains sensitive paths)
+config.toml
+
+# SSH keys (NEVER commit these)
+*.pem
+*_rsa
+*_rsa.pub
+hermes_key
+hermes_key.pub
+authorized_keys
+
+# Test files
+/test_files/
+*.tmp
+*.temp
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Hermes specific
+/hermes_vault/
+*.enc
+
+# Documentation build
+/book/
+/docs/_build/
+
+# Backup files
+*.bak
+*.backup
