@@ -7,7 +7,7 @@ use std::net::TcpStream;
 use std::path::Path;
 
 pub struct SftpClient {
-    session: Session,
+    pub session: Session,
 }
 
 impl SftpClient {

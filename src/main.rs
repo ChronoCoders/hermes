@@ -19,6 +19,9 @@ enum Commands {
 
         #[arg(short, long, help = "Encryption password")]
         password: String,
+
+        #[arg(short, long, help = "Custom remote path (optional)")]
+        remote_path: Option<String>,
     },
 
     #[command(about = "Download and decrypt text message")]
@@ -37,6 +40,9 @@ enum Commands {
 
         #[arg(short, long, help = "Encryption password")]
         password: String,
+
+        #[arg(short, long, help = "Custom remote path (optional)")]
+        remote_path: Option<String>,
     },
 
     #[command(about = "Download and decrypt file")]
@@ -51,6 +57,9 @@ enum Commands {
         output: Option<String>,
     },
 
+    #[command(about = "List encrypted files in vault")]
+    List,
+
     #[command(about = "Initialize Hermes configuration")]
     Init,
 
@@ -64,8 +73,12 @@ fn main() -> Result<()> {
     ui::print_banner();
 
     match cli.command {
-        Commands::SendMsg { message, password } => {
-            commands::send_msg::execute(&message, &password)?;
+        Commands::SendMsg {
+            message,
+            password,
+            remote_path,
+        } => {
+            commands::send_msg::execute(&message, &password, remote_path.as_deref())?;
         }
 
         Commands::RecvMsg {
@@ -75,8 +88,12 @@ fn main() -> Result<()> {
             commands::recv_msg::execute(&remote_file, &password)?;
         }
 
-        Commands::SendFile { file, password } => {
-            commands::send_file::execute(&file, &password)?;
+        Commands::SendFile {
+            file,
+            password,
+            remote_path,
+        } => {
+            commands::send_file::execute(&file, &password, remote_path.as_deref())?;
         }
 
         Commands::RecvFile {
@@ -85,6 +102,10 @@ fn main() -> Result<()> {
             output,
         } => {
             commands::recv_file::execute(&remote_file, &password, output.as_deref())?;
+        }
+
+        Commands::List => {
+            commands::list::execute()?;
         }
 
         Commands::Init => {
