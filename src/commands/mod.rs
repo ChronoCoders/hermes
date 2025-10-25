@@ -1,6 +1,10 @@
 pub mod config;
+pub mod export_pubkey;
+pub mod import_pubkey;
 pub mod init;
+pub mod keygen;
 pub mod list;
+pub mod list_keys;
 pub mod recv_file;
 pub mod recv_msg;
 pub mod send_file;

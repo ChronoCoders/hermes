@@ -6,7 +6,12 @@ use crate::ui;
 use std::fs::File;
 use std::io::Write;
 
-pub fn execute(remote_file: &str, password: &str, output_path: Option<&str>) -> Result<()> {
+pub fn execute(
+    remote_file: &str,
+    password: Option<&str>,
+    output_path: Option<&str>,
+    recipient_name: Option<&str>,
+) -> Result<()> {
     ui::print_box_start("FILE_DECRYPT");
 
     let config = Settings::load()?;
@@ -36,7 +41,39 @@ pub fn execute(remote_file: &str, password: &str, output_path: Option<&str>) -> 
     }
 
     ui::print_box_line(">> Decrypting and decompressing...");
-    let decrypted = crypto::decrypt_data(&encrypted, password)?;
+
+    let decrypted = if package.is_multi_recipient() {
+        if let Some(name) = recipient_name {
+            ui::print_box_line(&format!(">> Using recipient key: {}", name));
+            crypto::decrypt::decrypt_data_multi(&encrypted, name)?
+        } else {
+            ui::print_box_line("");
+            ui::print_box_end();
+            println!();
+            ui::print_error("MULTI-RECIPIENT FILE");
+            ui::print_info(
+                "Recipients",
+                &package
+                    .recipients
+                    .iter()
+                    .map(|r| r.name.clone())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            );
+            println!();
+            println!("Use: hermes recv-file {} --recipient <n>", remote_file);
+            println!();
+            return Err(HermesError::ConfigError(
+                "Recipient name required for multi-recipient file".to_string(),
+            ));
+        }
+    } else if let Some(pwd) = password {
+        crypto::decrypt_data(&encrypted, pwd)?
+    } else {
+        return Err(HermesError::ConfigError(
+            "Password required for password-encrypted file".to_string(),
+        ));
+    };
 
     ui::print_box_line(">> Verifying file integrity...");
 
@@ -64,6 +101,9 @@ pub fn execute(remote_file: &str, password: &str, output_path: Option<&str>) -> 
     ui::print_info("Integrity", "VERIFIED ✓");
     if package.compressed() {
         ui::print_info("Decompressed", "Yes");
+    }
+    if package.is_multi_recipient() {
+        ui::print_info("Type", "Multi-recipient");
     }
     if package.expires_at > 0 {
         let now = std::time::SystemTime::now()

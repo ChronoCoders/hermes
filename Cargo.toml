@@ -2,7 +2,7 @@
 name = "hermes"
 version = "1.0.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Altug Tatlisu <contact@chronocoder.dev>"]
 description = "Secure file transfer with military-grade encryption"
 license = "MIT"
 
@@ -17,6 +17,7 @@ rand = "0.8"
 ssh2 = "0.9"
 base64 = "0.21"
 hex = "0.4"
+rsa = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 clap = { version = "4.4", features = ["derive"] }

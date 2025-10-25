@@ -1,93 +1,54 @@
-# HERMES 🔐
-
-**Military-Grade Secure File Transfer System**
+# 🔐 HERMES - Military-Grade Secure File Transfer System
 
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/ChronoCoders/hermes/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security](https://img.shields.io/badge/security-military--grade-brightgreen.svg)]()
 
-Hermes is a secure file transfer system built entirely in Rust, providing **AES-256-GCM encryption**, **Argon2 key derivation**, and **SFTP transport** for classified data transmission.
+A command-line secure file transfer system with military-grade encryption, featuring hybrid RSA+AES encryption, self-destruct timers, and multi-recipient support.
 
-```
-╔═══════════════════════════════════════════════════════════╗
-║    ██╗  ██╗███████╗██████╗ ███╗   ███╗███████╗███████╗    ║
-║    ██║  ██║██╔════╝██╔══██╗████╗ ████║██╔════╝██╔════╝    ║
-║    ███████║█████╗  ██████╔╝██╔████╔██║█████╗  ███████╗    ║
-║    ██╔══██║██╔══╝  ██╔══██╗██║╚██╔╝██║██╔══╝  ╚════██║    ║
-║    ██║  ██║███████╗██║  ██║██║ ╚═╝ ██║███████╗███████║    ║
-║    ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝    ║
-║                                                           ║
-║         SECURE TRANSFER PROTOCOL v1.0 [ENCRYPTED]         ║
-║         MILITARY-GRADE • AES-256-GCM • ARGON2             ║
-╚═══════════════════════════════════════════════════════════╝
-```
+## 🎯 Features
 
----
+### 🔒 Core Security
+- **Hybrid Encryption**: RSA-4096 + AES-256-GCM
+- **Key Derivation**: Argon2 (memory-hard, resistant to GPU attacks)
+- **Integrity Verification**: SHA-256 checksums
+- **Custom Binary Protocol**: Efficient, compact file format
 
-## 🚀 Features
+### 👥 Multi-Recipient Support
+- **RSA Public Key Encryption**: Send to multiple recipients
+- **Individual Key Management**: Each recipient uses their own private key
+- **Key Fingerprinting**: Verify recipient identities
+- **Backward Compatible**: Works with password-based encryption
 
-### 🔒 Security
-- **AES-256-GCM** - NSA-approved encryption for TOP SECRET data
-- **Argon2** - Memory-hard key derivation resistant to GPU attacks
-- **SHA-256** - Integrity verification for all encrypted data
-- **RSA-4096** - SSH key authentication
-- **Random Nonces** - Unique 96-bit nonce per encryption
-- **Memory Safe** - Rust eliminates buffer overflows and memory corruption
-
-### 📦 Functionality
-- **Message Encryption** - Secure text message transmission
-- **File Encryption** - Encrypt files of any size
-- **GZIP Compression** - Automatic compression for large files
-- **Custom Paths** - Specify upload/download locations
-- **Vault Management** - List and organize encrypted files
-- **Progress Tracking** - Real-time upload/download indicators
+### ⏱️ Advanced Features
+- **Self-Destruct Timer**: Automatic expiration (TTL-based)
+- **Compression**: GZIP compression for files >1KB
+- **SFTP Integration**: Secure remote storage
+- **Custom Remote Paths**: Organize encrypted files
 
 ### 🎨 User Experience
-- **Simple CLI** - Intuitive command-line interface
-- **Colored Output** - Beautiful cyberpunk-themed interface
-- **Single Binary** - No runtime dependencies (2.5 MB)
-- **Cross-Platform** - Windows, Linux, macOS support
+- Beautiful CLI interface with colored output
+- Progress indicators for large operations
+- Detailed status messages
+- Cross-platform support (Windows, Linux, macOS)
 
----
+## 📦 Installation
 
-## 📥 Installation
-
-### Pre-built Binary (Recommended)
-
-Download the latest release from [Releases](https://github.com/ChronoCoders/hermes/releases):
-
-**Windows:**
-```cmd
-curl -LO https://github.com/ChronoCoders/hermes/releases/download/v1.0.0/hermes-windows.exe
-move hermes-windows.exe C:\hermes\hermes.exe
-```
-
-**Linux/macOS:**
-```bash
-curl -LO https://github.com/ChronoCoders/hermes/releases/download/v1.0.0/hermes-linux
-chmod +x hermes-linux
-sudo mv hermes-linux /usr/local/bin/hermes
-```
-
-### Build from Source
-
-**Requirements:**
-- Rust 1.70 or later
-- Cargo
-- OpenSSH (for SFTP server)
+### From Source
 
 ```bash
-git clone https://github.com/ChronoCoders/hermes.git
+# Clone the repository
+git clone https://github.com/yourusername/hermes.git
 cd hermes
+
+# Build release version
 cargo build --release
+
+# Install (optional)
+cargo install --path .
 ```
 
-Binary will be at `target/release/hermes` (or `hermes.exe` on Windows)
-
----
-
-## ⚡ Quick Start
+## 🚀 Quick Start
 
 ### 1. Initialize Configuration
 
@@ -95,288 +56,157 @@ Binary will be at `target/release/hermes` (or `hermes.exe` on Windows)
 hermes init
 ```
 
-Creates config at `~/.config/hermes/config.toml` (Linux/macOS) or `%APPDATA%\hermes\config.toml` (Windows)
+Edit `~/.config/hermes/config.toml` with your SFTP credentials.
 
-### 2. Setup SSH Keys
-
-**Windows:**
-```cmd
-ssh-keygen -t rsa -b 4096 -f C:\Users\%USERNAME%\.ssh\hermes_key -N ""
-ssh-keygen -p -m PEM -f C:\Users\%USERNAME%\.ssh\hermes_key
-type C:\Users\%USERNAME%\.ssh\hermes_key.pub >> C:\Users\%USERNAME%\.ssh\authorized_keys
-```
-
-**Linux/macOS:**
-```bash
-ssh-keygen -t rsa -b 4096 -f ~/.ssh/hermes_key -N ""
-cat ~/.ssh/hermes_key.pub >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/hermes_key
-```
-
-### 3. Create Vault Directories
-
-**Windows:**
-```cmd
-mkdir C:\hermes_vault\inbox C:\hermes_vault\outbox C:\hermes_vault\files
-```
-
-**Linux/macOS:**
-```bash
-mkdir -p ~/.hermes_vault/{inbox,outbox,files}
-```
-
-### 4. Start SSH Service
-
-**Windows:**
-```cmd
-net start sshd
-```
-
-**Linux:**
-```bash
-sudo systemctl start sshd
-```
-
-**macOS:**
-```bash
-sudo systemsetup -setremotelogin on
-```
-
----
-
-## 💻 Usage
-
-### Send Encrypted Message
+### 2. Password-Based Encryption (Simple)
 
 ```bash
-hermes send-msg "Secret meeting at 3pm" --password MySecurePass123
+# Encrypt and send a message
+hermes send-msg "Secret message" -p MySecurePassword123
+
+# Encrypt and send a file
+hermes send-file document.pdf -p MySecurePassword123
+
+# Decrypt a message
+hermes recv-msg msg_20250125_120000.enc -p MySecurePassword123
+
+# Decrypt a file
+hermes recv-file document_20250125_120000.enc -p MySecurePassword123
 ```
 
-### Receive Encrypted Message
+### 3. Multi-Recipient Encryption (Advanced)
 
 ```bash
-hermes recv-msg msg_20251024_163826.enc --password MySecurePass123
+# Generate your RSA keypair
+hermes keygen alice
+
+# Export your public key to share
+hermes export-pubkey alice -o alice_public.pem
+
+# Import recipient's public key
+hermes import-pubkey bob bob_public.pem
+
+# Send to multiple recipients
+hermes send-msg "Top secret" --recipients alice,bob,charlie
+hermes send-file document.pdf --recipients alice,bob
+
+# Decrypt with your private key
+hermes recv-msg msg_20250125_120000.enc --recipient alice
+hermes recv-file document_20250125_120000.enc --recipient alice
 ```
 
-### Send Encrypted File
+### 4. Self-Destruct Timer
 
 ```bash
-hermes send-file confidential_report.pdf --password FilePass456
+# Message expires in 24 hours
+hermes send-msg "This will self-destruct" -p Pass123 -t 24
+
+# File expires in 48 hours
+hermes send-file secret.txt -p Pass123 -t 48
+
+# Multi-recipient with expiry
+hermes send-file classified.pdf --recipients alice,bob -t 72
 ```
 
-### Receive Encrypted File
+## 📖 Commands
 
+### Configuration & Setup
+
+| Command | Description |
+|---------|-------------|
+| `hermes init` | Initialize Hermes configuration |
+| `hermes config` | Display current configuration |
+| `hermes list` | List all encrypted files with status |
+
+### Key Management
+
+| Command | Description |
+|---------|-------------|
+| `hermes keygen <n>` | Generate RSA-4096 keypair |
+| `hermes export-pubkey <n> -o <file>` | Export public key |
+| `hermes import-pubkey <n> <file>` | Import recipient's public key |
+| `hermes list-keys` | List all keys and recipients |
+
+### Encryption & Decryption
+
+**Messages:**
 ```bash
-hermes recv-file report_20251024.enc --password FilePass456 --output decrypted.pdf
+# Password-based
+hermes send-msg <message> -p <password> [-t <hours>]
+hermes recv-msg <file> -p <password>
+
+# Multi-recipient
+hermes send-msg <message> --recipients <name1,name2> [-t <hours>]
+hermes recv-msg <file> --recipient <n>
 ```
 
-### List Encrypted Files
-
+**Files:**
 ```bash
-hermes list
+# Password-based
+hermes send-file <path> -p <password> [-t <hours>]
+hermes recv-file <file> -p <password> [-o <output>]
+
+# Multi-recipient
+hermes send-file <path> --recipients <name1,name2> [-t <hours>]
+hermes recv-file <file> --recipient <n> [-o <output>]
 ```
 
-### Custom Upload Path
+## 🔐 Security Details
 
-```bash
-hermes send-msg "Important data" -p pass123 --remote-path /custom/location/msg.enc
-```
+### Encryption Algorithm
+- **Symmetric**: AES-256-GCM (Galois/Counter Mode)
+- **Asymmetric**: RSA-4096 with PKCS#1 v1.5 padding
+- **Key Derivation**: Argon2id (default parameters)
+- **Random Generation**: OS-provided CSPRNG
 
----
-
-## 📚 Documentation
-
-- **[CLI User Guide](docs/HERMES_CLI_USER_GUIDE.md)** - Complete command reference and examples
-- **[Whitepaper](docs/HERMES_WHITEPAPER.md)** - Technical architecture and cryptographic analysis
-- **[API Documentation](https://docs.rs/hermes)** - Rust library documentation
-
----
-
-## 🔐 Security
-
-### Cryptographic Specifications
-
-| Component | Algorithm | Key Size | Security Level |
-|-----------|-----------|----------|----------------|
-| Encryption | AES-256-GCM | 256-bit | TOP SECRET |
-| Key Derivation | Argon2id | 256-bit output | Memory-hard |
-| Integrity | SHA-256 | 256-bit | Collision-resistant |
-| Transport | SSH/SFTP | RSA-4096 | Forward secrecy |
-
-### Compliance
-
-- ✅ **NIST FIPS 197** - AES encryption standard
-- ✅ **NIST SP 800-38D** - GCM mode specification
-- ✅ **RFC 9106** - Argon2 specification
-- ✅ **NSA Suite B** - Approved for classified data
-- ✅ **HIPAA** - Healthcare data protection
-- ✅ **GDPR** - European data privacy
-
-### Security Audit
-
-No known vulnerabilities. Cryptographic implementation reviewed by security researchers.
-
-**Report security issues:** security@chronocoders.com
-
----
-
-## 🏗️ Architecture
+### Binary Protocol Format
 
 ```
-┌─────────────┐                    ┌─────────────┐
-│   Sender    │                    │  Receiver   │
-│  (Hermes)   │                    │  (Hermes)   │
-└──────┬──────┘                    └──────┬──────┘
-       │                                  │
-       │ 1. Encrypt (AES-256-GCM)         │
-       │ 2. Compress (GZIP)               │
-       │ 3. Upload (SFTP/SSH)             │
-       │                                  │
-       └──────────┬──────────────────────┘
-                  │
-                  ▼
-         ┌────────────────┐
-         │  SFTP Server   │
-         │   (OpenSSH)    │
-         └────────┬───────┘
-                  │
-                  ▼
-         ┌────────────────┐
-         │  Encrypted     │
-         │  Vault Storage │
-         │  (Filesystem)  │
-         └────────────────┘
-                  │
-                  ▼
-         4. Download (SFTP/SSH)
-         5. Decompress (GUNZIP)
-         6. Decrypt (AES-256-GCM)
-         7. Verify (SHA-256)
+[Magic: 4 bytes] "HRMS"
+[Version: 1 byte] 0x01
+[Flags: 1 byte] Compressed, Multi-recipient
+[Salt Length: 2 bytes]
+[Salt: variable]
+[Nonce: 12 bytes]
+[Checksum: 32 bytes] SHA-256
+[Original Size: 8 bytes]
+[Expires At: 8 bytes] Unix timestamp
+[Filename Length: 2 bytes]
+[Filename: variable]
+[Recipient Count: 2 bytes]
+  For each recipient:
+    [Name Length: 2 bytes]
+    [Name: variable]
+    [Encrypted Key Length: 2 bytes]
+    [Encrypted Key: ~512 bytes]
+[Ciphertext Length: 4 bytes]
+[Ciphertext: variable]
 ```
 
----
+## 📝 Changelog
 
-## 🛠️ Technology Stack
+### v1.0.0 (2025-01-25)
+- ✨ Multi-recipient RSA+AES hybrid encryption
+- ✨ Self-destruct timer (TTL-based expiration)
+- ✨ Custom binary protocol
+- ✨ RSA key management
+- ✨ GZIP compression
+- ✨ SHA-256 integrity verification
+- ✨ Backward compatibility with password-based encryption
 
-- **Language:** Rust 2021 Edition
-- **Crypto:** `aes-gcm`, `argon2`, `rand`, `sha2`
-- **Transport:** `ssh2` (libssh2 bindings)
-- **CLI:** `clap` v4
-- **Serialization:** `serde`, `serde_json`, `toml`
-- **Compression:** `flate2` (GZIP)
-- **UI:** `colored`, `indicatif`
+## 📄 License
 
----
+This project is licensed under the MIT License.
 
-## 📊 Performance
+## ⚠️ Disclaimer
 
-| Operation | Time | Throughput |
-|-----------|------|------------|
-| Key Derivation (Argon2) | 95 ms | N/A |
-| Encryption (1 MB) | 12 ms | 83 MB/s |
-| Decryption (1 MB) | 10 ms | 100 MB/s |
-| Compression (1 MB text) | 33 ms | 30 MB/s |
-| SFTP Upload (1 MB) | 150 ms | 6.7 MB/s |
-| SFTP Download (1 MB) | 130 ms | 7.7 MB/s |
+This software is provided for educational and legitimate security purposes only.
 
-*Benchmarked on Intel i7-10700K @ 3.8 GHz with AES-NI*
+## 📧 Contact
+
+- Author: Altug Tatlisu
+- Email: contact@chronocoder.dev
 
 ---
 
-## 🗺️ Roadmap
-
-### Version 1.1 (Q1 2025)
-- [ ] Self-destruct timer for temporary files
-- [ ] Multi-recipient encryption (hybrid RSA+AES)
-- [ ] Batch operations for multiple files
-- [ ] Resume capability for interrupted transfers
-
-### Version 1.2 (Q2 2025)
-- [ ] Web-based user interface
-- [ ] Email integration (SMTP)
-- [ ] Cloud storage backends (S3, Azure, GCS)
-- [ ] Mobile apps (iOS/Android)
-
-### Version 2.0 (Q3 2025)
-- [ ] Peer-to-peer mode (no server required)
-- [ ] Steganography (hide data in images)
-- [ ] Post-quantum cryptography (Kyber/Dilithium)
-- [ ] Hardware security module (HSM) support
-
-See [ROADMAP.md](ROADMAP.md) for detailed feature plans.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-
-```bash
-git clone https://github.com/ChronoCoders/hermes.git
-cd hermes
-cargo build
-cargo test
-cargo run -- --help
-```
-
-### Code Standards
-
-- Follow Rust style guidelines (`rustfmt`)
-- Add tests for new features
-- Update documentation
-- No unsafe code without justification
-- Security-critical changes require review
-
----
-
-## 📜 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-```
-Copyright (c) 2025 ChronoCoders
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-```
-
----
-
-## 🙏 Acknowledgments
-
-- **Rust Community** - For excellent cryptographic libraries
-- **NIST** - For AES-256 and SHA-256 standards
-- **PHC** - For Argon2 algorithm
-- **OpenSSH** - For secure transport protocol
-- **Contributors** - Everyone who helped improve Hermes
-
----
-
-## 📞 Contact
-
-- **Website:** https://chronocoders.com
-- **Email:** info@chronocoders.com
-- **GitHub:** https://github.com/ChronoCoders/hermes
-- **Issues:** https://github.com/ChronoCoders/hermes/issues
-- **Discussions:** https://github.com/ChronoCoders/hermes/discussions
-
----
-
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=ChronoCoders/hermes&type=Date)](https://star-history.com/#ChronoCoders/hermes&Date)
-
----
-
-**Made with 🔐 by ChronoCoders**
-
-*"Security is not a luxury. It is a right."*
+**⚡ Built with Rust 🦀 | Secured by Mathematics 🔢 | Protected by Design 🛡️**

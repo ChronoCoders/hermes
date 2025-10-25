@@ -10,9 +10,10 @@ use std::path::Path;
 
 pub fn execute(
     file_path: &str,
-    password: &str,
+    password: Option<&str>,
     remote_path: Option<&str>,
     ttl_hours: Option<u64>,
+    recipients: Option<Vec<String>>,
 ) -> Result<()> {
     ui::print_box_start("FILE_ENCRYPT");
 
@@ -38,10 +39,25 @@ pub fn execute(
         ">> Size: {:.2} MB",
         original_size as f64 / 1024.0 / 1024.0
     ));
-    ui::print_box_line(">> Compressing and encrypting...");
 
-    let encrypted =
-        crypto::encrypt_data(&plaintext, password, Some(filename.to_string()), ttl_hours)?;
+    let encrypted = if let Some(recips) = recipients {
+        ui::print_box_line(&format!(">> Recipients: {}", recips.join(", ")));
+        ui::print_box_line(">> Compressing and encrypting with RSA hybrid...");
+        crypto::encrypt::encrypt_data_multi(
+            &plaintext,
+            None,
+            Some(filename.to_string()),
+            ttl_hours,
+            Some(recips),
+        )?
+    } else if let Some(pwd) = password {
+        ui::print_box_line(">> Compressing and encrypting...");
+        crypto::encrypt_data(&plaintext, pwd, Some(filename.to_string()), ttl_hours)?
+    } else {
+        return Err(HermesError::ConfigError(
+            "Either password or recipients required".to_string(),
+        ));
+    };
 
     let package = crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
 
@@ -89,6 +105,9 @@ pub fn execute(
     );
     if package.compressed() {
         ui::print_info("Compression", "GZIP");
+    }
+    if package.is_multi_recipient() {
+        ui::print_info("Type", "Multi-recipient (RSA+AES)");
     }
     if let Some(hours) = ttl_hours {
         ui::print_info("Expires", &format!("in {} hours", hours));

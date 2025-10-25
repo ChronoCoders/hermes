@@ -11,13 +11,60 @@ use std::io::Read;
 pub fn decrypt_data(encrypted: &[u8], password: &str) -> Result<Vec<u8>> {
     let package = EncryptedPackage::from_bytes(encrypted)?;
 
-    let salt_str =
-        String::from_utf8(package.salt.clone()).map_err(|_| HermesError::DecryptionFailed)?;
-    let salt = SaltString::from_b64(&salt_str).map_err(|_| HermesError::DecryptionFailed)?;
+    let key = if package.is_multi_recipient() {
+        return Err(HermesError::DecryptionFailed);
+    } else {
+        let salt_str =
+            String::from_utf8(package.salt.clone()).map_err(|_| HermesError::DecryptionFailed)?;
+        let salt = SaltString::from_b64(&salt_str).map_err(|_| HermesError::DecryptionFailed)?;
 
-    let key = derive_key(password, &salt)?;
+        derive_key(password, &salt)?
+    };
 
-    let cipher = Aes256Gcm::new_from_slice(&key).map_err(|_| HermesError::DecryptionFailed)?;
+    decrypt_with_key(encrypted, &key)
+}
+
+pub fn decrypt_data_multi(encrypted: &[u8], recipient_name: &str) -> Result<Vec<u8>> {
+    let package = EncryptedPackage::from_bytes(encrypted)?;
+
+    if !package.is_multi_recipient() {
+        return Err(HermesError::DecryptionFailed);
+    }
+
+    let key_dir = dirs::home_dir()
+        .ok_or_else(|| HermesError::ConfigError("Could not find home directory".to_string()))?
+        .join(".hermes")
+        .join("keys");
+
+    let private_key_path = key_dir.join(format!("{}.pem", recipient_name));
+    if !private_key_path.exists() {
+        return Err(HermesError::ConfigError(format!(
+            "Private key not found for: {}",
+            recipient_name
+        )));
+    }
+
+    let private_key = crate::crypto::load_private_key(private_key_path.to_str().unwrap())?;
+
+    let recipient = package
+        .recipients
+        .iter()
+        .find(|r| r.name == recipient_name)
+        .ok_or(HermesError::DecryptionFailed)?;
+
+    let data_key_bytes =
+        crate::crypto::decrypt_key_with_private(&recipient.encrypted_key, &private_key)?;
+
+    let mut data_key = [0u8; 32];
+    data_key.copy_from_slice(&data_key_bytes);
+
+    decrypt_with_key(encrypted, &data_key)
+}
+
+fn decrypt_with_key(encrypted: &[u8], key: &[u8; 32]) -> Result<Vec<u8>> {
+    let package = EncryptedPackage::from_bytes(encrypted)?;
+
+    let cipher = Aes256Gcm::new_from_slice(key).map_err(|_| HermesError::DecryptionFailed)?;
 
     let nonce = Nonce::from(package.nonce);
 

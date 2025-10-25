@@ -7,16 +7,33 @@ use chrono::Local;
 
 pub fn execute(
     message: &str,
-    password: &str,
+    password: Option<&str>,
     remote_path: Option<&str>,
     ttl_hours: Option<u64>,
+    recipients: Option<Vec<String>>,
 ) -> Result<()> {
     ui::print_box_start("MESSAGE_ENCRYPT");
 
     ui::print_box_line(&format!(">> Length: {} chars", message.len()));
-    ui::print_box_line(">> Encrypting message...");
 
-    let encrypted = crypto::encrypt_data(message.as_bytes(), password, None, ttl_hours)?;
+    let encrypted = if let Some(recips) = recipients {
+        ui::print_box_line(&format!(">> Recipients: {}", recips.join(", ")));
+        ui::print_box_line(">> Encrypting with RSA hybrid encryption...");
+        crypto::encrypt::encrypt_data_multi(
+            message.as_bytes(),
+            None,
+            None,
+            ttl_hours,
+            Some(recips),
+        )?
+    } else if let Some(pwd) = password {
+        ui::print_box_line(">> Encrypting message...");
+        crypto::encrypt_data(message.as_bytes(), pwd, None, ttl_hours)?
+    } else {
+        return Err(crate::error::HermesError::ConfigError(
+            "Either password or recipients required".to_string(),
+        ));
+    };
 
     if let Some(hours) = ttl_hours {
         ui::print_box_line(&format!(">> Self-destruct: {} hours", hours));
