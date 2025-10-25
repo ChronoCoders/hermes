@@ -1,6 +1,6 @@
 use crate::config::Settings;
 use crate::crypto;
-use crate::error::Result;
+use crate::error::{HermesError, Result};
 use crate::transfer::SftpClient;
 use crate::ui;
 use std::fs::File;
@@ -23,12 +23,23 @@ pub fn execute(remote_file: &str, password: &str, output_path: Option<&str>) -> 
     ui::print_box_line(">> Downloading encrypted file...");
     let encrypted = client.download(&remote_path)?;
 
+    let package = crate::crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
+
+    if package.is_expired() {
+        ui::print_box_line("");
+        ui::print_box_end();
+        println!();
+        ui::print_error("FILE EXPIRED");
+        ui::print_info("Status", "Self-destructed ⚠️");
+        println!();
+        return Err(HermesError::DecryptionFailed);
+    }
+
     ui::print_box_line(">> Decrypting and decompressing...");
     let decrypted = crypto::decrypt_data(&encrypted, password)?;
 
     ui::print_box_line(">> Verifying file integrity...");
 
-    let package = crate::crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
     let filename = package
         .filename
         .clone()
@@ -53,6 +64,16 @@ pub fn execute(remote_file: &str, password: &str, output_path: Option<&str>) -> 
     ui::print_info("Integrity", "VERIFIED ✓");
     if package.compressed() {
         ui::print_info("Decompressed", "Yes");
+    }
+    if package.expires_at > 0 {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let remaining = (package.expires_at as i64 - now as i64) / 3600;
+        if remaining > 0 {
+            ui::print_info("Expires", &format!("in {} hours", remaining));
+        }
     }
     ui::print_status("UNLOCKED");
     println!();

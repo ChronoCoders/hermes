@@ -1,11 +1,11 @@
 use crate::config::Settings;
 use crate::crypto;
-use crate::error::Result;
+use crate::error::{HermesError, Result};
 use crate::transfer::SftpClient;
 use crate::ui;
 
 pub fn execute(remote_file: &str, password: &str) -> Result<()> {
-    ui::print_box_start("DECRYPT");
+    ui::print_box_start("MESSAGE_DECRYPT");
 
     let config = Settings::load()?;
 
@@ -18,39 +18,47 @@ pub fn execute(remote_file: &str, password: &str) -> Result<()> {
         format!("{}/{}", config.paths.outbox, remote_file)
     };
 
-    ui::print_box_line(">> Downloading encrypted payload...");
+    ui::print_box_line(">> Downloading encrypted message...");
     let encrypted = client.download(&remote_path)?;
 
-    ui::print_box_line(">> Decrypting with provided key...");
+    let package = crate::crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
+
+    if package.is_expired() {
+        ui::print_box_line("");
+        ui::print_box_end();
+        println!();
+        ui::print_error("MESSAGE EXPIRED");
+        ui::print_info("Status", "Self-destructed ⚠️");
+        println!();
+        return Err(HermesError::DecryptionFailed);
+    }
+
+    ui::print_box_line(">> Decrypting message...");
     let decrypted = crypto::decrypt_data(&encrypted, password)?;
 
-    let message =
-        String::from_utf8(decrypted).map_err(|_| crate::error::HermesError::DecryptionFailed)?;
+    ui::print_box_line(">> Verifying integrity...");
 
-    ui::print_box_line(">> Verifying integrity (SHA-256)...");
+    let message = String::from_utf8(decrypted).map_err(|_| HermesError::DecryptionFailed)?;
+
     ui::print_box_line("");
     ui::print_box_end();
 
     println!();
-    ui::print_success("MESSAGE DECRYPTED & VERIFIED");
-    println!();
-    println!(
-        "{}",
-        "┌─[PLAINTEXT]──────────────────────────────────────┐".cyan()
-    );
-    println!("{} {} {}", "│".cyan(), message, "│".cyan());
-    println!(
-        "{}",
-        "└──────────────────────────────────────────────────┘".cyan()
-    );
-    println!();
-    ui::print_info("From", &remote_path);
-    ui::print_info("Size", &format!("{} bytes", message.len()));
-    ui::print_info("Integrity", "VERIFIED ✓");
-    ui::print_status("SECURE");
+    ui::print_success("MESSAGE DECRYPTED");
+    ui::print_info("Content", &message);
+    ui::print_info("Length", &format!("{} chars", message.len()));
+    if package.expires_at > 0 {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let remaining = (package.expires_at as i64 - now as i64) / 3600;
+        if remaining > 0 {
+            ui::print_info("Expires", &format!("in {} hours", remaining));
+        }
+    }
+    ui::print_status("UNLOCKED");
     println!();
 
     Ok(())
 }
-
-use colored::*;

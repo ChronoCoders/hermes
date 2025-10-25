@@ -8,7 +8,12 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-pub fn execute(file_path: &str, password: &str, remote_path: Option<&str>) -> Result<()> {
+pub fn execute(
+    file_path: &str,
+    password: &str,
+    remote_path: Option<&str>,
+    ttl_hours: Option<u64>,
+) -> Result<()> {
     ui::print_box_start("FILE_ENCRYPT");
 
     let path = Path::new(file_path);
@@ -35,13 +40,18 @@ pub fn execute(file_path: &str, password: &str, remote_path: Option<&str>) -> Re
     ));
     ui::print_box_line(">> Compressing and encrypting...");
 
-    let encrypted = crypto::encrypt_data(&plaintext, password, Some(filename.to_string()))?;
+    let encrypted =
+        crypto::encrypt_data(&plaintext, password, Some(filename.to_string()), ttl_hours)?;
 
     let package = crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
 
     if package.compressed() {
         let ratio = (1.0 - (encrypted.len() as f64 / original_size as f64)) * 100.0;
         ui::print_box_line(&format!(">> Compressed: {:.1}% reduction", ratio));
+    }
+
+    if let Some(hours) = ttl_hours {
+        ui::print_box_line(&format!(">> Self-destruct: {} hours", hours));
     }
 
     ui::print_box_line(">> Uploading to SFTP vault...");
@@ -79,6 +89,11 @@ pub fn execute(file_path: &str, password: &str, remote_path: Option<&str>) -> Re
     );
     if package.compressed() {
         ui::print_info("Compression", "GZIP");
+    }
+    if let Some(hours) = ttl_hours {
+        ui::print_info("Expires", &format!("in {} hours", hours));
+    } else {
+        ui::print_info("Expires", "Never");
     }
     ui::print_status("LOCKED");
     println!();
