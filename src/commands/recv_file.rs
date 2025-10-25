@@ -28,9 +28,10 @@ pub fn execute(remote_file: &str, password: &str, output_path: Option<&str>) -> 
 
     ui::print_box_line(">> Verifying file integrity...");
 
-    let package: crate::crypto::EncryptedPackage = serde_json::from_slice(&encrypted)?;
+    let package = crate::crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
     let filename = package
         .filename
+        .clone()
         .unwrap_or_else(|| "decrypted_file".to_string());
 
     let output = output_path.unwrap_or(&filename);
@@ -50,7 +51,7 @@ pub fn execute(remote_file: &str, password: &str, output_path: Option<&str>) -> 
         &format!("{:.2} MB", decrypted.len() as f64 / 1024.0 / 1024.0),
     );
     ui::print_info("Integrity", "VERIFIED ✓");
-    if package.compressed {
+    if package.compressed() {
         ui::print_info("Decompressed", "Yes");
     }
     ui::print_status("UNLOCKED");

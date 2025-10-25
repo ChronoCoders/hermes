@@ -37,9 +37,9 @@ pub fn execute(file_path: &str, password: &str, remote_path: Option<&str>) -> Re
 
     let encrypted = crypto::encrypt_data(&plaintext, password, Some(filename.to_string()))?;
 
-    let package: crypto::EncryptedPackage = serde_json::from_slice(&encrypted)?;
+    let package = crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
 
-    if package.compressed {
+    if package.compressed() {
         let ratio = (1.0 - (encrypted.len() as f64 / original_size as f64)) * 100.0;
         ui::print_box_line(&format!(">> Compressed: {:.1}% reduction", ratio));
     }
@@ -77,7 +77,7 @@ pub fn execute(file_path: &str, password: &str, remote_path: Option<&str>) -> Re
         "Encrypted",
         &format!("{:.2} MB", encrypted.len() as f64 / 1024.0 / 1024.0),
     );
-    if package.compressed {
+    if package.compressed() {
         ui::print_info("Compression", "GZIP");
     }
     ui::print_status("LOCKED");
