@@ -19,15 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Commands: `hermes validate`, `hermes config --validate --test`
   - Comprehensive validation with helpful error messages
   
-- 📊 **Progress bar infrastructure**
-  - Progress bar utilities module
-  - Ready for integration with file operations
-  - Spinners for long-running operations
+- 📊 **Progress bars and spinners**
+  - Progress bars for file upload/download (files >1MB)
+  - Progress bars for encryption/decryption operations
+  - Animated spinners for RSA key generation
+  - Real-time feedback for long-running operations
+  - Visual indicators for file read/write operations
 
 ### Changed
 - Enhanced CLI with better flag organization
 - Improved error messages for configuration issues
 - Better user feedback during validation
+- File operations now show progress for large files
 
 ### Dependencies
 - Added `clap_complete` for shell completions
