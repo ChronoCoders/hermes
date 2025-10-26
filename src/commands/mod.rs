@@ -1,3 +1,4 @@
+pub mod completion;
 pub mod config;
 pub mod export_pubkey;
 pub mod import_pubkey;
@@ -9,3 +10,4 @@ pub mod recv_file;
 pub mod recv_msg;
 pub mod send_file;
 pub mod send_msg;
+pub mod validate;

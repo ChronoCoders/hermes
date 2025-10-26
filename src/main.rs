@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use hermes::commands;
 use hermes::error::Result;
 use hermes::ui;
@@ -7,9 +7,18 @@ use hermes::ui;
 #[command(name = "hermes")]
 #[command(about = "Military-grade secure file transfer system", long_about = None)]
 #[command(version)]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
     command: Commands,
+}
+
+#[derive(Clone, ValueEnum)]
+pub enum Shell {
+    Bash,
+    Zsh,
+    Fish,
+    PowerShell,
+    Elvish,
 }
 
 #[derive(Subcommand)]
@@ -18,10 +27,28 @@ enum Commands {
     Init,
 
     #[command(about = "Display current configuration")]
-    Config,
+    Config {
+        #[arg(long, help = "Validate configuration")]
+        validate: bool,
+
+        #[arg(long, help = "Test SFTP connection")]
+        test: bool,
+    },
 
     #[command(about = "List all encrypted files in vault")]
     List,
+
+    #[command(about = "Generate shell completion script")]
+    Completion {
+        #[arg(value_enum, help = "Shell type")]
+        shell: clap_complete::Shell,
+    },
+
+    #[command(about = "Validate configuration")]
+    Validate {
+        #[arg(long, help = "Test SFTP connection")]
+        test_connection: bool,
+    },
 
     #[command(about = "Generate RSA keypair")]
     Keygen {
@@ -134,11 +161,25 @@ fn main() -> Result<()> {
         Commands::Init => {
             commands::init::execute()?;
         }
-        Commands::Config => {
-            commands::config::execute()?;
+        Commands::Config { validate, test } => {
+            if validate || test {
+                commands::validate::execute(test)?;
+            } else {
+                commands::config::execute()?;
+            }
         }
         Commands::List => {
             commands::list::execute()?;
+        }
+        Commands::Completion { shell } => {
+            use clap::CommandFactory;
+            use clap_complete::generate;
+
+            let mut cmd = Cli::command();
+            generate(shell, &mut cmd, "hermes", &mut std::io::stdout());
+        }
+        Commands::Validate { test_connection } => {
+            commands::validate::execute(test_connection)?;
         }
         Commands::Keygen { name, output } => {
             commands::keygen::execute(&name, output.as_deref())?;

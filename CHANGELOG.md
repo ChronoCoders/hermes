@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-01-26
+
+### Added
+- 🎯 **Shell completion support**
+  - Generate completion scripts for bash, zsh, fish, powershell, elvish
+  - Command: `hermes completion <shell>`
+  - Easy installation with auto-generated instructions
+  
+- ✅ **Config validation**
+  - Validate configuration files
+  - Test SFTP connection
+  - Commands: `hermes validate`, `hermes config --validate --test`
+  - Comprehensive validation with helpful error messages
+  
+- 📊 **Progress bar infrastructure**
+  - Progress bar utilities module
+  - Ready for integration with file operations
+  - Spinners for long-running operations
+
+### Changed
+- Enhanced CLI with better flag organization
+- Improved error messages for configuration issues
+- Better user feedback during validation
+
+### Dependencies
+- Added `clap_complete` for shell completions
+
+## [1.0.1] - 2025-01-25
+
+### Fixed
+- Fixed rand_core import issues
+- Fixed argon2 SaltString generation
+- Fixed OsRng usage for RSA operations
+- Added RngCore trait import
+- Resolved all clippy warnings
+
+### Changed
+- Updated to rand_core 0.6 API
+- Updated to argon2 0.5 API
+- All tests passing
+
 ## [1.0.0] - 2025-01-25
 
 ### Added
@@ -73,5 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Message encryption/decryption
 - File encryption/decryption
 
-[1.0.0]: https://github.com/yourusername/hermes/releases/tag/v1.0.0
-[0.1.0]: https://github.com/yourusername/hermes/releases/tag/v0.1.0
+[1.1.0]: https://github.com/ChronoCoders/hermes/releases/tag/v1.1.0
+[1.0.1]: https://github.com/ChronoCoders/hermes/releases/tag/v1.0.1
+[1.0.0]: https://github.com/ChronoCoders/hermes/releases/tag/v1.0.0
+[0.1.0]: https://github.com/ChronoCoders/hermes/releases/tag/v0.1.0
