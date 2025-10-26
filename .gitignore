@@ -4,13 +4,6 @@
 *.pdb
 Cargo.lock
 
-# Build artifacts
-*.exe
-*.dll
-*.so
-*.dylib
-*.a
-
 # IDE
 .vscode/
 .idea/
@@ -19,37 +12,25 @@ Cargo.lock
 *~
 .DS_Store
 
-# Config files (contains sensitive paths)
+# Hermes specific
+*.enc
 config.toml
-
-# SSH keys (NEVER commit these)
-*.pem
-*_rsa
-*_rsa.pub
-hermes_key
-hermes_key.pub
-authorized_keys
-
-# Test files
-/test_files/
-*.tmp
-*.temp
+.hermes/
+hermes_vault/
 
 # Logs
 *.log
-logs/
 
 # OS
 Thumbs.db
-desktop.ini
+.DS_Store
 
-# Hermes specific
-/hermes_vault/
-*.enc
-
-# Documentation build
-/book/
-/docs/_build/
+# Test files
+test_*.txt
+secret*.txt
+classified*.txt
+*.pem
+*.pub
 
 # Backup files
 *.bak
