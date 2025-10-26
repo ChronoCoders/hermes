@@ -1,5 +1,5 @@
 use crate::error::{HermesError, Result};
-use rand::rngs::OsRng;
+use rand_core::OsRng;
 use rsa::pkcs8::{
     DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey, LineEnding,
 };
