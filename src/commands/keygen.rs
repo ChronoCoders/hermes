@@ -1,5 +1,6 @@
 use crate::crypto;
 use crate::error::Result;
+use crate::progress;
 use crate::ui;
 use std::path::PathBuf;
 
@@ -25,10 +26,15 @@ pub fn execute(name: &str, output_dir: Option<&str>) -> Result<()> {
     ui::print_box_line(&format!(">> Generating RSA-4096 keypair for: {}", name));
     ui::print_box_line(">> This may take a moment...");
 
+    let spinner = progress::create_keygen_spinner();
+    spinner.set_message("Generating prime numbers...".to_string());
+
     crypto::generate_keypair(
         private_key_path.to_str().unwrap(),
         public_key_path.to_str().unwrap(),
     )?;
+
+    spinner.finish_with_message("✓ Keypair generated".to_string());
 
     let public_key = crypto::load_public_key(public_key_path.to_str().unwrap())?;
     let fingerprint = crypto::get_key_fingerprint(&public_key)?;

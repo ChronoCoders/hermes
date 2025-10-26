@@ -1,6 +1,7 @@
 use crate::config::Settings;
 use crate::crypto;
 use crate::error::{HermesError, Result};
+use crate::progress;
 use crate::transfer::SftpClient;
 use crate::ui;
 use std::fs::File;
@@ -25,8 +26,14 @@ pub fn execute(
         format!("{}/{}", config.paths.files, remote_file)
     };
 
+    // Download with progress
     ui::print_box_line(">> Downloading encrypted file...");
     let encrypted = client.download(&remote_path)?;
+
+    if encrypted.len() > 1024 * 1024 {
+        let progress = progress::create_download_progress(encrypted.len() as u64);
+        progress.finish_with_message("✓ Download complete".to_string());
+    }
 
     let package = crate::crypto::encrypt::EncryptedPackage::from_bytes(&encrypted)?;
 
@@ -40,12 +47,24 @@ pub fn execute(
         return Err(HermesError::DecryptionFailed);
     }
 
+    // Decrypt with progress
     ui::print_box_line(">> Decrypting and decompressing...");
 
     let decrypted = if package.is_multi_recipient() {
         if let Some(name) = recipient_name {
             ui::print_box_line(&format!(">> Using recipient key: {}", name));
-            crypto::decrypt::decrypt_data_multi(&encrypted, name)?
+
+            if encrypted.len() > 1024 * 1024 {
+                let spinner = progress::ProgressTracker::new_spinner("🔓 Decrypting");
+                spinner.set_message("Processing...".to_string());
+
+                let result = crypto::decrypt::decrypt_data_multi(&encrypted, name)?;
+
+                spinner.finish_with_message("✓ Decryption complete".to_string());
+                result
+            } else {
+                crypto::decrypt::decrypt_data_multi(&encrypted, name)?
+            }
         } else {
             ui::print_box_line("");
             ui::print_box_end();
@@ -68,7 +87,17 @@ pub fn execute(
             ));
         }
     } else if let Some(pwd) = password {
-        crypto::decrypt_data(&encrypted, pwd)?
+        if encrypted.len() > 1024 * 1024 {
+            let spinner = progress::ProgressTracker::new_spinner("🔓 Decrypting");
+            spinner.set_message("Processing...".to_string());
+
+            let result = crypto::decrypt_data(&encrypted, pwd)?;
+
+            spinner.finish_with_message("✓ Decryption complete".to_string());
+            result
+        } else {
+            crypto::decrypt_data(&encrypted, pwd)?
+        }
     } else {
         return Err(HermesError::ConfigError(
             "Password required for password-encrypted file".to_string(),
@@ -86,7 +115,20 @@ pub fn execute(
 
     ui::print_box_line(">> Writing to disk...");
     let mut file = File::create(output)?;
-    file.write_all(&decrypted)?;
+
+    if decrypted.len() > 1024 * 1024 {
+        let progress = progress::ProgressTracker::new(decrypted.len() as u64, "💾 Writing");
+
+        let chunk_size = 8192;
+        for (i, chunk) in decrypted.chunks(chunk_size).enumerate() {
+            file.write_all(chunk)?;
+            progress.set_position((i * chunk_size) as u64);
+        }
+
+        progress.finish_with_message("✓ File saved".to_string());
+    } else {
+        file.write_all(&decrypted)?;
+    }
 
     ui::print_box_line("");
     ui::print_box_end();
