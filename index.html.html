@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HERMES - Military-Grade Secure File Transfer</title>
+    <meta name="description" content="Open-source secure file transfer system with AES-256-GCM encryption, Argon2 key derivation, and SFTP transport. Built with Rust for maximum security.">
+    <meta property="og:title" content="HERMES - Military-Grade File Transfer">
+    <meta property="og:description" content="Secure your data with military-grade encryption">
+    <meta property="og:type" content="website">
+    <meta name="keywords" content="encryption, file transfer, security, AES-256, Rust, open source, SFTP">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #581c87 50%, #0f172a 100%);
+            background-attachment: fixed;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #06b6d4, #3b82f6);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #0891b2, #2563eb);
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+        
+        .glow-box {
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.6); }
+        }
+        
+        .animate-pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .terminal-window {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .terminal-header {
+            background: rgba(6, 182, 212, 0.1);
+            padding: 8px 12px;
+            display: flex;
+            gap: 6px;
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(6, 182, 212, 0.4);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-cyan-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="text-cyan-400 text-2xl font-bold font-mono">
+                        <svg class="inline-block w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        HERMES
+                    </div>
+                    <span class="text-xs text-cyan-500 border border-cyan-500 px-2 py-0.5 rounded">v1.0.0</span>
+                </div>
+
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-300 hover:text-cyan-400 transition-colors">Features</a>
+                    <a href="#security" class="text-gray-300 hover:text-cyan-400 transition-colors">Security</a>
+                    <a href="#tech" class="text-gray-300 hover:text-cyan-400 transition-colors">Technology</a>
+                    <a href="#download" class="text-gray-300 hover:text-cyan-400 transition-colors">Download</a>
+                </div>
+
+                <div class="hidden md:flex space-x-4">
+                    <a href="https://github.com/ChronoCoders/hermes" target="_blank" 
+                       class="px-4 py-2 border border-cyan-500 text-cyan-400 rounded hover:bg-cyan-500 hover:text-white transition-all">
+                        GitHub
+                    </a>
+                    <a href="#download" 
+                       class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded hover:from-cyan-600 hover:to-blue-600 transition-all font-semibold">
+                        Download
+                    </a>
+                </div>
+
+                <button id="mobile-menu-btn" class="md:hidden text-cyan-400 text-2xl">☰</button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-800 border-t border-cyan-500/20">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#features" class="block text-gray-300 hover:text-cyan-400">Features</a>
+                <a href="#security" class="block text-gray-300 hover:text-cyan-400">Security</a>
+                <a href="#tech" class="block text-gray-300 hover:text-cyan-400">Technology</a>
+                <a href="#download" class="block text-gray-300 hover:text-cyan-400">Download</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <div class="inline-block mb-4 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full animate-pulse-glow">
+                <span class="text-cyan-400 text-sm font-mono">
+                    <svg class="inline-block w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                    </svg>
+                    Built with Rust • Open Source • Military-Grade
+                </span>
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                Secure File Transfer
+                <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 glow-text">
+                    Made Simple
+                </span>
+            </h1>
+
+            <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                Military-grade AES-256-GCM encryption with Argon2 key derivation. 
+                Zero dependencies. Memory-safe Rust implementation. 
+                <strong class="text-cyan-400">Your data, your control.</strong>
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <a href="#download" 
+                   class="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all font-semibold text-lg shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70">
+                    Download v1.0.0
+                </a>
+                <a href="https://github.com/ChronoCoders/hermes" target="_blank"
+                   class="px-8 py-4 border-2 border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-white transition-all font-semibold text-lg">
+                    View on GitHub
+                </a>
+            </div>
+
+            <!-- Terminal Preview -->
+            <div class="terminal-window max-w-4xl mx-auto backdrop-blur-sm glow-box">
+                <div class="terminal-header">
+                    <div class="terminal-dot bg-red-500"></div>
+                    <div class="terminal-dot bg-yellow-500"></div>
+                    <div class="terminal-dot bg-green-500"></div>
+                </div>
+                <div class="font-mono text-left text-sm p-6">
+                    <div class="text-cyan-400 mb-2">$ hermes send-msg "Mission critical data" --password SecurePass</div>
+                    <div class="text-green-400">
+                        <svg class="inline-block w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        MESSAGE SECURED
+                    </div>
+                    <div class="text-gray-400 ml-4">Cipher: AES-256-GCM</div>
+                    <div class="text-gray-400 ml-4">Status: [ENCRYPTED]</div>
+                </div>
+            </div>
+
+            <!-- Email Notification Form -->
+            <form id="notify-form" class="mt-8 max-w-md mx-auto">
+                <div class="flex gap-2">
+                    <input type="email" id="email-input" placeholder="Get notified of updates" required
+                           class="flex-1 px-4 py-3 bg-slate-800 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500">
+                    <button type="submit" 
+                            class="px-6 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors font-semibold">
+                        Notify Me
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 px-4 bg-slate-900/50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                    Enterprise Security
+                    <br>
+                    <span class="text-cyan-400">Simple Interface</span>
+                </h2>
+                <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+                    Military-grade protection without the complexity. Secure your sensitive data in seconds.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6">
+                    <div class="mb-4 animate-float">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-2">AES-256-GCM</h3>
+                    <p class="text-gray-300">NSA-approved encryption for TOP SECRET data. Authenticated encryption with 128-bit authentication tags.</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6">
+                    <div class="mb-4 animate-float" style="animation-delay: 0.2s;">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-2">Argon2 KDF</h3>
+                    <p class="text-gray-300">Memory-hard key derivation resistant to GPU attacks. Winner of Password Hashing Competition 2015.</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6">
+                    <div class="mb-4 animate-float" style="animation-delay: 0.4s;">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-2">Memory Safe</h3>
+                    <p class="text-gray-300">Built with Rust. Zero buffer overflows, use-after-free, or data races. Compile-time guarantees.</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6">
+                    <div class="mb-4 animate-float" style="animation-delay: 0.6s;">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-2">Single Binary</h3>
+                    <p class="text-gray-300">No runtime dependencies. Just 2.5 MB executable. Works on Windows, Linux, and macOS.</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6">
+                    <div class="mb-4 animate-float" style="animation-delay: 0.8s;">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-2">SFTP Transport</h3>
+                    <p class="text-gray-300">Secure file transfer over SSH with RSA-4096 authentication. Industry-standard protocol.</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6">
+                    <div class="mb-4 animate-float" style="animation-delay: 1s;">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-2">Compression</h3>
+                    <p class="text-gray-300">Automatic GZIP compression for large files. Intelligent compression with fallback.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Specifications -->
+    <section id="security" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                    Cryptographic 
+                    <span class="text-cyan-400">Specifications</span>
+                </h2>
+                <p class="text-xl text-gray-300">
+                    Independently auditable. Standards-compliant. Battle-tested algorithms.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-cyan-500/30 rounded-lg p-8 backdrop-blur-sm glow-box">
+                    <h3 class="text-2xl font-bold text-cyan-400 mb-6">Encryption</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between border-b border-cyan-500/20 pb-2">
+                            <span class="text-gray-400">Algorithm</span>
+                            <span class="text-white font-semibold">AES-256-GCM</span>
+                        </div>
+                        <div class="flex justify-between border-b border-cyan-500/20 pb-2">
+                            <span class="text-gray-400">Key Size</span>
+                            <span class="text-white font-semibold">256-bit</span>
+                        </div>
+                        <div class="flex justify-between border-b border-cyan-500/20 pb-2">
+                            <span class="text-gray-400">Security Level</span>
+                            <span class="text-green-400 font-semibold">TOP SECRET</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Standard</span>
+                            <span class="text-white font-semibold">NIST FIPS 197</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-cyan-500/30 rounded-lg p-8 backdrop-blur-sm glow-box">
+                    <h3 class="text-2xl font-bold text-cyan-400 mb-6">Key Derivation</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between border-b border-cyan-500/20 pb-2">
+                            <span class="text-gray-400">Algorithm</span>
+                            <span class="text-white font-semibold">Argon2id</span>
+                        </div>
+                        <div class="flex justify-between border-b border-cyan-500/20 pb-2">
+                            <span class="text-gray-400">Memory Cost</span>
+                            <span class="text-white font-semibold">19 MB</span>
+                        </div>
+                        <div class="flex justify-between border-b border-cyan-500/20 pb-2">
+                            <span class="text-gray-400">Resistance</span>
+                            <span class="text-green-400 font-semibold">Memory-hard</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Standard</span>
+                            <span class="text-white font-semibold">RFC 9106</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-slate-800/30 border border-cyan-500/20 rounded-lg p-6">
+                <div class="flex items-start space-x-4">
+                    <div>
+                        <svg class="w-10 h-10 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-lg font-bold text-white mb-2">Standards Compliance</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm">NSA Suite B</span>
+                            <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm">HIPAA</span>
+                            <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm">GDPR</span>
+                            <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm">NIST SP 800-38D</span>
+                            <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm">SOX</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section id="tech" class="py-20 px-4 bg-slate-900/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                    Powered by 
+                    <span class="text-cyan-400">Rust</span>
+                </h2>
+                <p class="text-xl text-gray-300">
+                    Built with modern, memory-safe technology for uncompromising security.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <div class="text-center">
+                    <div class="mb-4 flex justify-center">
+                        <svg class="w-16 h-16 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Rust Language</h3>
+                    <p class="text-gray-400">Memory safety without garbage collection</p>
+                </div>
+                <div class="text-center">
+                    <div class="mb-4 flex justify-center">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Pure Rust Crypto</h3>
+                    <p class="text-gray-400">No C dependencies, constant-time operations</p>
+                </div>
+                <div class="text-center">
+                    <div class="mb-4 flex justify-center">
+                        <svg class="w-16 h-16 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Zero-Cost</h3>
+                    <p class="text-gray-400">High-level abstractions, no runtime penalty</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 border border-cyan-500/20 rounded-lg p-8 backdrop-blur-sm">
+                <h3 class="text-2xl font-bold text-cyan-400 mb-6">Performance Benchmarks</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="text-gray-400 mb-2">Key Derivation (Argon2)</div>
+                        <div class="text-3xl font-bold text-white">95ms</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400 mb-2">Encryption (1 MB)</div>
+                        <div class="text-3xl font-bold text-white">12ms</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400 mb-2">Throughput</div>
+                        <div class="text-3xl font-bold text-cyan-400">83 MB/s</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400 mb-2">Binary Size</div>
+                        <div class="text-3xl font-bold text-cyan-400">2.5 MB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                    Trusted by 
+                    <span class="text-cyan-400">Professionals</span>
+                </h2>
+                <p class="text-xl text-gray-300">
+                    From startups to Fortune 500, protecting what matters most.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6 text-center">
+                    <div class="mb-3 flex justify-center">
+                        <svg class="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Business</h3>
+                    <p class="text-gray-400 text-sm">Secure document sharing, legal files, financial data</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6 text-center">
+                    <div class="mb-3 flex justify-center">
+                        <svg class="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Healthcare</h3>
+                    <p class="text-gray-400 text-sm">Patient records, HIPAA compliance, medical data</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6 text-center">
+                    <div class="mb-3 flex justify-center">
+                        <svg class="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Government</h3>
+                    <p class="text-gray-400 text-sm">Classified information, TOP SECRET data, secure comms</p>
+                </div>
+
+                <div class="feature-card bg-slate-800/50 border border-cyan-500/20 rounded-lg p-6 text-center">
+                    <div class="mb-3 flex justify-center">
+                        <svg class="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Research</h3>
+                    <p class="text-gray-400 text-sm">Study data, participant privacy, IRB compliance</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download CTA -->
+    <section id="download" class="py-20 px-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+                Ready to Secure Your Data?
+            </h2>
+            <p class="text-xl text-gray-300 mb-8">
+                Download Hermes today. Open source, free forever.
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-4 mb-8">
+                <a href="https://github.com/ChronoCoders/hermes/releases" 
+                   class="p-6 bg-slate-800 border border-cyan-500/30 rounded-lg hover:border-cyan-500 transition-all feature-card">
+                    <div class="mb-2 flex justify-center">
+                        <svg class="w-10 h-10 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+                        </svg>
+                    </div>
+                    <div class="font-bold text-white mb-1">Windows</div>
+                    <div class="text-sm text-gray-400">2.8 MB • x64</div>
+                </a>
+
+                <a href="https://github.com/ChronoCoders/hermes/releases" 
+                   class="p-6 bg-slate-800 border border-cyan-500/30 rounded-lg hover:border-cyan-500 transition-all feature-card">
+                    <div class="mb-2 flex justify-center">
+                        <svg class="w-10 h-10 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c6.627 0 12 5.373 12 12s-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0zm-1.818 14.458l-3.931-3.931-1.414 1.414 4.638 4.638.707.707.707-.707 8.485-8.485-1.414-1.414z"/>
+                        </svg>
+                    </div>
+                    <div class="font-bold text-white mb-1">Linux</div>
+                    <div class="text-sm text-gray-400">2.6 MB • x64</div>
+                </a>
+
+                <a href="https://github.com/ChronoCoders/hermes/releases" 
+                   class="p-6 bg-slate-800 border border-cyan-500/30 rounded-lg hover:border-cyan-500 transition-all feature-card">
+                    <div class="mb-2 flex justify-center">
+                        <svg class="w-10 h-10 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5M13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
+                        </svg>
+                    </div>
+                    <div class="font-bold text-white mb-1">macOS</div>
+                    <div class="text-sm text-gray-400">5.2 MB • Universal</div>
+                </a>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="https://github.com/ChronoCoders/hermes" 
+                   class="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all font-semibold text-lg shadow-lg shadow-cyan-500/50">
+                    View on GitHub
+                </a>
+                <a href="https://github.com/ChronoCoders/hermes/tree/main/docs" 
+                   class="px-8 py-4 border-2 border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-white transition-all font-semibold text-lg">
+                    Read Documentation
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 bg-slate-900 border-t border-cyan-500/20">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-cyan-400 text-xl font-bold font-mono mb-4 flex items-center">
+                        <svg class="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        HERMES
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        Military-grade secure file transfer. Built with Rust.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4">Product</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#features" class="hover:text-cyan-400 transition-colors">Features</a></li>
+                        <li><a href="#security" class="hover:text-cyan-400 transition-colors">Security</a></li>
+                        <li><a href="#download" class="hover:text-cyan-400 transition-colors">Download</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="https://github.com/ChronoCoders/hermes/tree/main/docs" class="hover:text-cyan-400 transition-colors">Documentation</a></li>
+                        <li><a href="https://github.com/ChronoCoders/hermes" class="hover:text-cyan-400 transition-colors">GitHub</a></li>
+                        <li><a href="https://github.com/ChronoCoders/hermes/releases" class="hover:text-cyan-400 transition-colors">Releases</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="https://github.com/ChronoCoders/hermes/blob/main/LICENSE" class="hover:text-cyan-400 transition-colors">MIT License</a></li>
+                        <li>Open Source</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-cyan-500/20 pt-8 text-center text-gray-400 text-sm">
+                <p>© 2025 ChronoCoders. Built with 
+                    <svg class="inline-block w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                    </svg>
+                    and Rust.
+                </p>
+                <p class="mt-2 italic">"Security is not a luxury. It is a right."</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Email notification form
+        const notifyForm = document.getElementById('notify-form');
+        const emailInput = document.getElementById('email-input');
+        
+        notifyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+            alert(`Thanks! We'll notify ${email} about updates.`);
+            emailInput.value = '';
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // Close mobile menu if open
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        // Add parallax effect on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallaxElements = document.querySelectorAll('.animate-float');
+            parallaxElements.forEach((el, index) => {
+                const speed = 0.5 + (index * 0.1);
+                el.style.transform = `translateY(${scrolled * speed * 0.01}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
