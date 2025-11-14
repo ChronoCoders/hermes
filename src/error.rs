@@ -45,4 +45,10 @@ pub enum HermesError {
     RemotePathNotSpecified,
 }
 
+impl From<dialoguer::Error> for HermesError {
+    fn from(err: dialoguer::Error) -> Self {
+        HermesError::ConfigError(format!("Dialog error: {}", err))
+    }
+}
+
 pub type Result<T> = std::result::Result<T, HermesError>;

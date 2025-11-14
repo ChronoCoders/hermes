@@ -80,6 +80,12 @@ enum Commands {
     #[command(about = "List all RSA keys")]
     ListKeys,
 
+    // ============================================
+    // NEW: INTERACTIVE MODE (v1.1.0)
+    // ============================================
+    #[command(about = "Launch interactive mode (TUI)")]
+    Interactive,
+
     #[command(about = "Encrypt and send a text message")]
     SendMsg {
         #[arg(help = "Message to encrypt")]
@@ -150,6 +156,65 @@ enum Commands {
         #[arg(long, help = "Recipient name (for multi-recipient files)")]
         recipient: Option<String>,
     },
+
+    // ============================================
+    // NEW: BATCH OPERATIONS (v1.1.0)
+    // ============================================
+    #[command(about = "Encrypt and send multiple files (batch operation)")]
+    SendBatch {
+        #[arg(help = "Paths to files to encrypt", required = true)]
+        file_paths: Vec<String>,
+
+        #[arg(short, long, help = "Encryption password (if not using recipients)")]
+        password: Option<String>,
+
+        #[arg(
+            short = 't',
+            long,
+            help = "Time-to-live in hours (self-destruct timer)"
+        )]
+        ttl: Option<u64>,
+
+        #[arg(long, value_delimiter = ',', help = "Recipients (comma-separated)")]
+        recipients: Option<Vec<String>>,
+    },
+
+    #[command(about = "Encrypt and send entire directory")]
+    SendDir {
+        #[arg(help = "Path to directory")]
+        dir_path: String,
+
+        #[arg(short, long, help = "Encryption password (if not using recipients)")]
+        password: Option<String>,
+
+        #[arg(
+            short = 't',
+            long,
+            help = "Time-to-live in hours (self-destruct timer)"
+        )]
+        ttl: Option<u64>,
+
+        #[arg(long, value_delimiter = ',', help = "Recipients (comma-separated)")]
+        recipients: Option<Vec<String>>,
+
+        #[arg(long, help = "Recursive directory traversal")]
+        recursive: bool,
+    },
+
+    #[command(about = "Receive and decrypt multiple files (batch operation)")]
+    RecvBatch {
+        #[arg(help = "Remote encrypted file names", required = true)]
+        remote_files: Vec<String>,
+
+        #[arg(short, long, help = "Decryption password (if not using recipient key)")]
+        password: Option<String>,
+
+        #[arg(short, long, help = "Output directory")]
+        output: Option<String>,
+
+        #[arg(long, help = "Recipient name (for multi-recipient files)")]
+        recipient: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -193,6 +258,14 @@ fn main() -> Result<()> {
         Commands::ListKeys => {
             commands::list_keys::execute()?;
         }
+
+        // ============================================
+        // NEW: INTERACTIVE MODE (v1.1.0)
+        // ============================================
+        Commands::Interactive => {
+            commands::interactive::execute()?;
+        }
+
         Commands::SendMsg {
             message,
             password,
@@ -238,6 +311,48 @@ fn main() -> Result<()> {
         } => {
             commands::recv_file::execute(
                 &remote_file,
+                password.as_deref(),
+                output.as_deref(),
+                recipient.as_deref(),
+            )?;
+        }
+
+        // ============================================
+        // NEW: BATCH OPERATIONS (v1.1.0)
+        // ============================================
+        Commands::SendBatch {
+            file_paths,
+            password,
+            ttl,
+            recipients,
+        } => {
+            commands::send_batch::execute(file_paths, password.as_deref(), ttl, recipients)?;
+        }
+
+        Commands::SendDir {
+            dir_path,
+            password,
+            ttl,
+            recipients,
+            recursive,
+        } => {
+            commands::send_dir::execute(
+                &dir_path,
+                password.as_deref(),
+                ttl,
+                recipients,
+                recursive,
+            )?;
+        }
+
+        Commands::RecvBatch {
+            remote_files,
+            password,
+            output,
+            recipient,
+        } => {
+            commands::recv_batch::execute(
+                remote_files,
                 password.as_deref(),
                 output.as_deref(),
                 recipient.as_deref(),

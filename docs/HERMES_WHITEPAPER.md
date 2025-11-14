@@ -78,7 +78,7 @@ Hermes is built on four core principles:
        │                                  │
        │  SSH/SFTP (Transport Layer)      │
        │                                  │
-       └──────────┬──────────────────────┘
+       └──────────┬───────────────────────┘
                   │
                   ▼
          ┌────────────────┐
