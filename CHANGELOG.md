@@ -26,14 +26,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time feedback for long-running operations
   - Visual indicators for file read/write operations
 
+- 📦 **Batch operations**
+  - `hermes send-batch` - Encrypt multiple files at once
+  - `hermes send-dir` - Encrypt entire directories (recursive support)
+  - `hermes recv-batch` - Decrypt multiple files in one command
+  - Progress tracking per file
+  - Error handling with success/failure summary
+  - Support for both password and multi-recipient encryption
+
+- 🎮 **Interactive mode (TUI)**
+  - `hermes interactive` - Launch interactive menu-driven interface
+  - Beautiful menu system with dialoguer
+  - Guided wizards for all operations:
+    - Send/receive messages
+    - Send/receive files
+    - Batch operations
+    - Key management
+    - Configuration
+  - No command-line arguments needed
+  - Perfect for beginners and GUI users
+
 ### Changed
 - Enhanced CLI with better flag organization
 - Improved error messages for configuration issues
 - Better user feedback during validation
 - File operations now show progress for large files
+- Main menu reorganized for better UX
 
 ### Dependencies
 - Added `clap_complete` for shell completions
+- Added `dialoguer` for interactive TUI mode
 
 ## [1.0.1] - 2025-01-25
 

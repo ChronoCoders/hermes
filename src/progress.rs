@@ -12,7 +12,7 @@ impl ProgressTracker {
             ProgressStyle::default_bar()
                 .template(&format!("{{spinner:.green}} {} [{{elapsed_precise}}] [{{bar:40.cyan/blue}}] {{bytes}}/{{total_bytes}} ({{eta}})", operation))
                 .unwrap()
-                .progress_chars("█▓▒░"),
+                .progress_chars("█▓░░"),
         );
 
         Self { bar }
@@ -48,6 +48,10 @@ impl ProgressTracker {
 
     pub fn finish_with_message(&self, msg: String) {
         self.bar.finish_with_message(msg);
+    }
+
+    pub fn finish_and_clear(&self) {
+        self.bar.finish_and_clear();
     }
 }
 
