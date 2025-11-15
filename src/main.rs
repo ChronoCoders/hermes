@@ -158,7 +158,44 @@ enum Commands {
     },
 
     // ============================================
-    // NEW: BATCH OPERATIONS (v1.1.0)
+    // NEW: CHUNKED FILE OPERATIONS (v1.2.0)
+    // ============================================
+    #[command(about = "Encrypt and send large file in chunks (memory-efficient)")]
+    SendFileChunked {
+        #[arg(help = "Path to large file to encrypt")]
+        file_path: String,
+
+        #[arg(short, long, help = "Encryption password (if not using recipients)")]
+        password: Option<String>,
+
+        #[arg(
+            short = 't',
+            long,
+            help = "Time-to-live in hours (self-destruct timer)"
+        )]
+        ttl: Option<u64>,
+
+        #[arg(long, value_delimiter = ',', help = "Recipients (comma-separated)")]
+        recipients: Option<Vec<String>>,
+    },
+
+    #[command(about = "Receive and decrypt chunked file")]
+    RecvFileChunked {
+        #[arg(help = "Remote manifest file name")]
+        remote_manifest: String,
+
+        #[arg(short, long, help = "Decryption password (if not using recipient key)")]
+        password: Option<String>,
+
+        #[arg(short, long, help = "Output file path")]
+        output: Option<String>,
+
+        #[arg(long, help = "Recipient name (for multi-recipient files)")]
+        recipient: Option<String>,
+    },
+
+    // ============================================
+    // BATCH OPERATIONS (v1.1.0)
     // ============================================
     #[command(about = "Encrypt and send multiple files (batch operation)")]
     SendBatch {
@@ -318,7 +355,33 @@ fn main() -> Result<()> {
         }
 
         // ============================================
-        // NEW: BATCH OPERATIONS (v1.1.0)
+        // CHUNKED FILE OPERATIONS (v1.2.0)
+        // ============================================
+        Commands::SendFileChunked {
+            file_path,
+            password,
+            ttl,
+            recipients,
+        } => {
+            commands::send_file_chunked::execute(&file_path, password.as_deref(), ttl, recipients)?;
+        }
+
+        Commands::RecvFileChunked {
+            remote_manifest,
+            password,
+            output,
+            recipient,
+        } => {
+            commands::recv_file_chunked::execute(
+                &remote_manifest,
+                password.as_deref(),
+                output.as_deref(),
+                recipient.as_deref(),
+            )?;
+        }
+
+        // ============================================
+        // BATCH OPERATIONS (v1.1.0)
         // ============================================
         Commands::SendBatch {
             file_paths,

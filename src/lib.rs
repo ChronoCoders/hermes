@@ -1,3 +1,4 @@
+pub mod chunking;
 pub mod commands;
 pub mod config;
 pub mod crypto;
