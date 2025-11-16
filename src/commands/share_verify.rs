@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::commands::shamir::Share;
+use crate::shamir::Share;
 use crate::ui;
 use std::fs;
 

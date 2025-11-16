@@ -21,6 +21,5 @@ pub mod send_dir;
 pub mod send_file;
 pub mod send_file_chunked;
 pub mod send_msg;
-pub mod shamir;
 pub mod share_verify;
 pub mod validate;

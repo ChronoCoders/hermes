@@ -1,6 +1,6 @@
 use crate::crypto::rsa::load_private_key;
 use crate::error::Result;
-use crate::commands::shamir::split_secret;
+use crate::shamir::split_secret;
 use crate::ui;
 use rsa::pkcs8::EncodePrivateKey;
 use std::fs;
