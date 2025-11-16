@@ -1,6 +1,6 @@
 use crate::config::Settings;
 use crate::error::Result;
-use colored::*;
+use colored::Colorize;
 use std::fs;
 
 pub fn execute() -> Result<()> {
@@ -25,14 +25,14 @@ fn print_directory(path: &str, label: &str) -> Result<()> {
 
     if let Ok(entries) = fs::read_dir(path) {
         let mut files: Vec<_> = entries
-            .filter_map(|e| e.ok())
+            .filter_map(std::result::Result::ok)
             .filter(|e| e.path().is_file())
             .collect();
 
         if files.is_empty() {
             println!("   {}", "(empty)".bright_black());
         } else {
-            files.sort_by_key(|e| e.path());
+            files.sort_by_key(std::fs::DirEntry::path);
 
             for entry in files {
                 let file_path = entry.path();
@@ -41,7 +41,7 @@ fn print_directory(path: &str, label: &str) -> Result<()> {
                 if let Ok(metadata) = entry.metadata() {
                     let size_kb = metadata.len() as f64 / 1024.0;
 
-                    let mut status_info = format!("{:.2} KB", size_kb);
+                    let mut status_info = format!("{size_kb:.2} KB");
 
                     if file_name.ends_with(".enc") {
                         if let Ok(file_data) = fs::read(&file_path) {

@@ -27,7 +27,7 @@ pub fn execute(
         .ok_or_else(|| HermesError::FileNotFound("Invalid filename".to_string()))?;
 
     ui::print_box_start("CHUNKED_ENCRYPT");
-    ui::print_box_line(&format!(">> File: {}", filename));
+    ui::print_box_line(&format!(">> File: {filename}"));
     ui::print_box_line(&format!(
         ">> Size: {} bytes ({:.2} MB)",
         file_size,
@@ -65,7 +65,7 @@ pub fn execute(
             manifest.total_chunks,
             chunk.index + 1
         );
-        ui::print_box_line(&format!("   {}", progress_msg));
+        ui::print_box_line(&format!("   {progress_msg}"));
 
         let chunk_path = temp_dir.join(&chunk.encrypted_path);
         let chunk_data = fs::read(&chunk_path)?;
@@ -109,7 +109,7 @@ pub fn execute(
         crypto::encrypt::encrypt_data_multi(
             manifest_json.as_bytes(),
             None,
-            Some(format!("{}.manifest", filename)),
+            Some(format!("{filename}.manifest")),
             ttl_hours,
             Some(recips.clone()),
         )?
@@ -117,7 +117,7 @@ pub fn execute(
         crypto::encrypt_data(
             manifest_json.as_bytes(),
             pwd,
-            Some(format!("{}.manifest", filename)),
+            Some(format!("{filename}.manifest")),
             ttl_hours,
         )?
     } else {
@@ -126,9 +126,9 @@ pub fn execute(
         ));
     };
 
-    let remote_manifest_path = format!("{}.manifest.enc", base_remote_path);
+    let remote_manifest_path = format!("{base_remote_path}.manifest.enc");
     client.upload(&encrypted_manifest_data, &remote_manifest_path)?;
-    ui::print_box_line(&format!("   ✓ Manifest: {}", remote_manifest_path));
+    ui::print_box_line(&format!("   ✓ Manifest: {remote_manifest_path}"));
 
     ui::print_box_line("");
     ui::print_box_line(">> Step 4/4: Cleanup...");

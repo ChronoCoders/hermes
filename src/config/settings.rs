@@ -35,10 +35,10 @@ impl Settings {
         }
 
         let contents = fs::read_to_string(&config_path)
-            .map_err(|e| HermesError::ConfigError(format!("Failed to read config: {}", e)))?;
+            .map_err(|e| HermesError::ConfigError(format!("Failed to read config: {e}")))?;
 
         toml::from_str(&contents)
-            .map_err(|e| HermesError::ConfigError(format!("Invalid config format: {}", e)))
+            .map_err(|e| HermesError::ConfigError(format!("Invalid config format: {e}")))
     }
 
     pub fn save(&self) -> Result<()> {
@@ -46,15 +46,15 @@ impl Settings {
 
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent).map_err(|e| {
-                HermesError::ConfigError(format!("Failed to create config directory: {}", e))
+                HermesError::ConfigError(format!("Failed to create config directory: {e}"))
             })?;
         }
 
         let contents = toml::to_string_pretty(self)
-            .map_err(|e| HermesError::ConfigError(format!("Failed to serialize config: {}", e)))?;
+            .map_err(|e| HermesError::ConfigError(format!("Failed to serialize config: {e}")))?;
 
         fs::write(&config_path, contents)
-            .map_err(|e| HermesError::ConfigError(format!("Failed to write config: {}", e)))?;
+            .map_err(|e| HermesError::ConfigError(format!("Failed to write config: {e}")))?;
 
         Ok(())
     }
@@ -67,9 +67,10 @@ impl Settings {
         Ok(config_dir.join("hermes").join("config.toml"))
     }
 
+    #[must_use]
     pub fn default_config() -> Self {
         let username = std::env::var("USERNAME").unwrap_or_else(|_| "user".to_string());
-        let key_path = format!("C:\\Users\\{}\\.ssh\\hermes_key", username);
+        let key_path = format!("C:\\Users\\{username}\\.ssh\\hermes_key");
 
         Self {
             sftp: SftpConfig {

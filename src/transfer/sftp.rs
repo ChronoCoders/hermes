@@ -16,22 +16,22 @@ impl SftpClient {
         spinner.enable_steady_tick(std::time::Duration::from_millis(100));
 
         let tcp = TcpStream::connect(format!("{}:{}", config.sftp.host, config.sftp.port))
-            .map_err(|e| HermesError::SftpConnectionFailed(format!("Connection failed: {}", e)))?;
+            .map_err(|e| HermesError::SftpConnectionFailed(format!("Connection failed: {e}")))?;
 
         let mut session = Session::new().map_err(|e| {
-            HermesError::SftpConnectionFailed(format!("Session creation failed: {}", e))
+            HermesError::SftpConnectionFailed(format!("Session creation failed: {e}"))
         })?;
 
         session.set_tcp_stream(tcp);
         session
             .handshake()
-            .map_err(|e| HermesError::SftpConnectionFailed(format!("Handshake failed: {}", e)))?;
+            .map_err(|e| HermesError::SftpConnectionFailed(format!("Handshake failed: {e}")))?;
 
         if let Some(key_file) = &config.sftp.key_file {
             session
                 .userauth_pubkey_file(&config.sftp.username, None, Path::new(key_file), None)
                 .map_err(|e| {
-                    HermesError::SftpConnectionFailed(format!("Key authentication failed: {}", e))
+                    HermesError::SftpConnectionFailed(format!("Key authentication failed: {e}"))
                 })?;
         } else {
             return Err(HermesError::SftpConnectionFailed(
@@ -48,20 +48,20 @@ impl SftpClient {
         let sftp = self
             .session
             .sftp()
-            .map_err(|e| HermesError::SftpOperationFailed(format!("SFTP init failed: {}", e)))?;
+            .map_err(|e| HermesError::SftpOperationFailed(format!("SFTP init failed: {e}")))?;
 
         let pb = ui::create_progress_bar(data.len() as u64);
         pb.set_message("Uploading...");
 
-        let mut remote_file = sftp.create(Path::new(remote_path)).map_err(|e| {
-            HermesError::SftpOperationFailed(format!("File creation failed: {}", e))
-        })?;
+        let mut remote_file = sftp
+            .create(Path::new(remote_path))
+            .map_err(|e| HermesError::SftpOperationFailed(format!("File creation failed: {e}")))?;
 
         let chunk_size = 8192;
         for (i, chunk) in data.chunks(chunk_size).enumerate() {
             remote_file
                 .write_all(chunk)
-                .map_err(|e| HermesError::SftpOperationFailed(format!("Upload failed: {}", e)))?;
+                .map_err(|e| HermesError::SftpOperationFailed(format!("Upload failed: {e}")))?;
             pb.set_position(((i + 1) * chunk_size).min(data.len()) as u64);
         }
 
@@ -74,15 +74,15 @@ impl SftpClient {
         let sftp = self
             .session
             .sftp()
-            .map_err(|e| HermesError::SftpOperationFailed(format!("SFTP init failed: {}", e)))?;
+            .map_err(|e| HermesError::SftpOperationFailed(format!("SFTP init failed: {e}")))?;
 
         let mut remote_file = sftp
             .open(Path::new(remote_path))
-            .map_err(|e| HermesError::SftpOperationFailed(format!("File not found: {}", e)))?;
+            .map_err(|e| HermesError::SftpOperationFailed(format!("File not found: {e}")))?;
 
         let stat = remote_file
             .stat()
-            .map_err(|e| HermesError::SftpOperationFailed(format!("Stat failed: {}", e)))?;
+            .map_err(|e| HermesError::SftpOperationFailed(format!("Stat failed: {e}")))?;
 
         let pb = ui::create_progress_bar(stat.size.unwrap_or(0));
         pb.set_message("Downloading...");
@@ -99,8 +99,7 @@ impl SftpClient {
                 }
                 Err(e) => {
                     return Err(HermesError::SftpOperationFailed(format!(
-                        "Download failed: {}",
-                        e
+                        "Download failed: {e}"
                     )))
                 }
             }

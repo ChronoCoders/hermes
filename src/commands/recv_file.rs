@@ -52,7 +52,7 @@ pub fn execute(
 
     let decrypted = if package.is_multi_recipient() {
         if let Some(name) = recipient_name {
-            ui::print_box_line(&format!(">> Using recipient key: {}", name));
+            ui::print_box_line(&format!(">> Using recipient key: {name}"));
 
             if encrypted.len() > 1024 * 1024 {
                 let spinner = progress::ProgressTracker::new_spinner("🔓 Decrypting");
@@ -80,7 +80,7 @@ pub fn execute(
                     .join(", "),
             );
             println!();
-            println!("Use: hermes recv-file {} --recipient <n>", remote_file);
+            println!("Use: hermes recv-file {remote_file} --recipient <n>");
             println!();
             return Err(HermesError::ConfigError(
                 "Recipient name required for multi-recipient file".to_string(),
@@ -154,7 +154,7 @@ pub fn execute(
             .as_secs();
         let remaining = (package.expires_at as i64 - now as i64) / 3600;
         if remaining > 0 {
-            ui::print_info("Expires", &format!("in {} hours", remaining));
+            ui::print_info("Expires", &format!("in {remaining} hours"));
         }
     }
     ui::print_status("UNLOCKED");

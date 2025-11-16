@@ -58,12 +58,12 @@ pub fn execute(
             &client,
         ) {
             Ok(output_file) => {
-                ui::print_box_line(&format!("   ✓ Saved: {}", output_file));
+                ui::print_box_line(&format!("   ✓ Saved: {output_file}"));
                 successful += 1;
                 results.push((remote_file.clone(), true, Some(output_file)));
             }
             Err(e) => {
-                ui::print_box_line(&format!("   ✗ Failed: {}", e));
+                ui::print_box_line(&format!("   ✗ Failed: {e}"));
                 failed += 1;
                 results.push((remote_file.clone(), false, None));
             }
@@ -83,7 +83,7 @@ pub fn execute(
         println!("\n❌ Failed files:");
         for (path, success, _) in &results {
             if !success {
-                println!("   • {}", path);
+                println!("   • {path}");
             }
         }
     }
@@ -93,8 +93,7 @@ pub fn execute(
 
     if failed > 0 {
         Err(HermesError::ConfigError(format!(
-            "{} files failed to decrypt",
-            failed
+            "{failed} files failed to decrypt"
         )))
     } else {
         Ok(())

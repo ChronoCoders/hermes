@@ -15,7 +15,7 @@ pub fn execute(test_connection: bool) -> Result<()> {
             c
         }
         Err(e) => {
-            ui::print_box_line(&format!("✗ Failed to load config: {}", e));
+            ui::print_box_line(&format!("✗ Failed to load config: {e}"));
             ui::print_box_end();
             return Err(e);
         }
@@ -56,9 +56,9 @@ pub fn execute(test_connection: bool) -> Result<()> {
     if let Some(ref key_file) = config.sftp.key_file {
         if !key_file.is_empty() {
             if Path::new(key_file).exists() {
-                ui::print_box_line(&format!("✓ SSH key found: {}", key_file));
+                ui::print_box_line(&format!("✓ SSH key found: {key_file}"));
             } else {
-                ui::print_box_line(&format!("⚠ SSH key not found: {}", key_file));
+                ui::print_box_line(&format!("⚠ SSH key not found: {key_file}"));
             }
         }
     }
@@ -102,7 +102,7 @@ pub fn execute(test_connection: bool) -> Result<()> {
                 ui::print_box_line("✓ Connection successful");
             }
             Err(e) => {
-                ui::print_box_line(&format!("✗ Connection failed: {}", e));
+                ui::print_box_line(&format!("✗ Connection failed: {e}"));
                 ui::print_box_end();
                 return Err(e);
             }

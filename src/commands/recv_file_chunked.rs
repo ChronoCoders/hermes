@@ -15,7 +15,7 @@ pub fn execute(
     recipient_name: Option<&str>,
 ) -> Result<()> {
     ui::print_box_start("CHUNKED_DECRYPT");
-    ui::print_box_line(&format!(">> Manifest: {}", remote_manifest));
+    ui::print_box_line(&format!(">> Manifest: {remote_manifest}"));
     ui::print_box_line("");
 
     let config = Settings::load()?;
@@ -69,7 +69,7 @@ pub fn execute(
             manifest.total_chunks,
             chunk.index + 1
         );
-        ui::print_box_line(&format!("   {}", progress_msg));
+        ui::print_box_line(&format!("   {progress_msg}"));
 
         let encrypted_chunk = client.download(&chunk.encrypted_path)?;
 

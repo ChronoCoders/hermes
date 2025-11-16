@@ -5,12 +5,13 @@ pub struct ProgressTracker {
 }
 
 impl ProgressTracker {
+    #[must_use]
     pub fn new(total: u64, operation: &str) -> Self {
         let bar = ProgressBar::new(total);
 
         bar.set_style(
             ProgressStyle::default_bar()
-                .template(&format!("{{spinner:.green}} {} [{{elapsed_precise}}] [{{bar:40.cyan/blue}}] {{bytes}}/{{total_bytes}} ({{eta}})", operation))
+                .template(&format!("{{spinner:.green}} {operation} [{{elapsed_precise}}] [{{bar:40.cyan/blue}}] {{bytes}}/{{total_bytes}} ({{eta}})"))
                 .unwrap()
                 .progress_chars("█▓░░"),
         );
@@ -18,12 +19,13 @@ impl ProgressTracker {
         Self { bar }
     }
 
+    #[must_use]
     pub fn new_spinner(operation: &str) -> Self {
         let bar = ProgressBar::new_spinner();
 
         bar.set_style(
             ProgressStyle::default_spinner()
-                .template(&format!("{{spinner:.green}} {} {{msg}}", operation))
+                .template(&format!("{{spinner:.green}} {operation} {{msg}}"))
                 .unwrap(),
         );
 
@@ -55,26 +57,32 @@ impl ProgressTracker {
     }
 }
 
+#[must_use]
 pub fn create_encryption_progress(size: u64) -> ProgressTracker {
     ProgressTracker::new(size, "🔐 Encrypting")
 }
 
+#[must_use]
 pub fn create_decryption_progress(size: u64) -> ProgressTracker {
     ProgressTracker::new(size, "🔓 Decrypting")
 }
 
+#[must_use]
 pub fn create_upload_progress(size: u64) -> ProgressTracker {
     ProgressTracker::new(size, "📤 Uploading")
 }
 
+#[must_use]
 pub fn create_download_progress(size: u64) -> ProgressTracker {
     ProgressTracker::new(size, "📥 Downloading")
 }
 
+#[must_use]
 pub fn create_compression_spinner() -> ProgressTracker {
     ProgressTracker::new_spinner("🗜️  Compressing")
 }
 
+#[must_use]
 pub fn create_keygen_spinner() -> ProgressTracker {
     ProgressTracker::new_spinner("🔑 Generating RSA key")
 }

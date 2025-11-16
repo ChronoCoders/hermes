@@ -5,7 +5,7 @@ use argon2::password_hash::{PasswordHasher, SaltString};
 use argon2::Argon2;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use rand_core::{OsRng, RngCore};
+use rsa::rand_core::{OsRng, RngCore};
 use sha2::{Digest, Sha256};
 use std::io::Write;
 
@@ -35,6 +35,7 @@ pub struct EncryptedPackage {
 }
 
 impl EncryptedPackage {
+    #[must_use]
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
 
@@ -270,14 +271,14 @@ impl EncryptedPackage {
             .decode(&json_pkg.ciphertext)
             .map_err(|_| HermesError::DecryptionFailed)?;
 
-        let checksum = if !json_pkg.checksum.is_empty() {
+        let checksum = if json_pkg.checksum.is_empty() {
+            [0u8; 32]
+        } else {
             let checksum_bytes =
                 hex::decode(&json_pkg.checksum).map_err(|_| HermesError::DecryptionFailed)?;
             let mut checksum_arr = [0u8; 32];
             checksum_arr.copy_from_slice(&checksum_bytes);
             checksum_arr
-        } else {
-            [0u8; 32]
         };
 
         let flags = if json_pkg.compressed {
@@ -301,14 +302,17 @@ impl EncryptedPackage {
         })
     }
 
+    #[must_use]
     pub fn compressed(&self) -> bool {
         (self.flags & FLAG_COMPRESSED) != 0
     }
 
+    #[must_use]
     pub fn is_multi_recipient(&self) -> bool {
         (self.flags & FLAG_MULTI_RECIPIENT) != 0
     }
 
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         if self.expires_at == 0 {
             return false;
@@ -356,11 +360,10 @@ pub fn encrypt_data_multi(
         let mut recipient_list = Vec::new();
 
         for name in names {
-            let pubkey_path = recipients_dir.join(format!("{}.pub", name));
+            let pubkey_path = recipients_dir.join(format!("{name}.pub"));
             if !pubkey_path.exists() {
                 return Err(HermesError::ConfigError(format!(
-                    "Recipient public key not found: {}",
-                    name
+                    "Recipient public key not found: {name}"
                 )));
             }
 
@@ -387,7 +390,7 @@ pub fn encrypt_data_multi(
     }
 
     let cipher = Aes256Gcm::new_from_slice(&data_key)
-        .map_err(|e| HermesError::EncryptionFailed(format!("Cipher creation failed: {}", e)))?;
+        .map_err(|e| HermesError::EncryptionFailed(format!("Cipher creation failed: {e}")))?;
 
     let mut nonce_bytes = [0u8; 12];
     OsRng.fill_bytes(&mut nonce_bytes);
@@ -405,9 +408,9 @@ pub fn encrypt_data_multi(
         let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
         encoder
             .write_all(plaintext)
-            .map_err(|e| HermesError::EncryptionFailed(format!("Compression failed: {}", e)))?;
+            .map_err(|e| HermesError::EncryptionFailed(format!("Compression failed: {e}")))?;
         let compressed_data = encoder.finish().map_err(|e| {
-            HermesError::EncryptionFailed(format!("Compression finish failed: {}", e))
+            HermesError::EncryptionFailed(format!("Compression finish failed: {e}"))
         })?;
 
         if compressed_data.len() < plaintext.len() {
@@ -423,7 +426,7 @@ pub fn encrypt_data_multi(
 
     let ciphertext = cipher
         .encrypt(&nonce, data_to_encrypt.as_ref())
-        .map_err(|e| HermesError::EncryptionFailed(format!("Encryption failed: {}", e)))?;
+        .map_err(|e| HermesError::EncryptionFailed(format!("Encryption failed: {e}")))?;
 
     let expires_at = if let Some(hours) = ttl_hours {
         let now = std::time::SystemTime::now()

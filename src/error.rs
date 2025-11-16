@@ -47,7 +47,7 @@ pub enum HermesError {
 
 impl From<dialoguer::Error> for HermesError {
     fn from(err: dialoguer::Error) -> Self {
-        HermesError::ConfigError(format!("Dialog error: {}", err))
+        HermesError::ConfigError(format!("Dialog error: {err}"))
     }
 }
 

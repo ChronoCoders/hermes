@@ -14,16 +14,15 @@ pub fn execute(name: &str, output_path: Option<&str>) -> Result<()> {
         .join(".hermes")
         .join("keys");
 
-    let public_key_path = key_dir.join(format!("{}.pub", name));
+    let public_key_path = key_dir.join(format!("{name}.pub"));
 
     if !public_key_path.exists() {
         return Err(crate::error::HermesError::FileNotFound(format!(
-            "Public key not found: {}",
-            name
+            "Public key not found: {name}"
         )));
     }
 
-    ui::print_box_line(&format!(">> Exporting public key: {}", name));
+    ui::print_box_line(&format!(">> Exporting public key: {name}"));
 
     let public_key = crypto::load_public_key(public_key_path.to_str().unwrap())?;
     let fingerprint = crypto::get_key_fingerprint(&public_key)?;
@@ -31,7 +30,7 @@ pub fn execute(name: &str, output_path: Option<&str>) -> Result<()> {
     let dest = if let Some(path) = output_path {
         PathBuf::from(path)
     } else {
-        PathBuf::from(format!("{}_public.pem", name))
+        PathBuf::from(format!("{name}_public.pem"))
     };
 
     fs::copy(&public_key_path, &dest)?;
