@@ -65,6 +65,36 @@ enum Commands {
     #[command(about = "List all RSA keys")]
     ListKeys,
 
+    #[command(about = "Split RSA private key into shares (Shamir's Secret Sharing)")]
+    KeySplit {
+        #[arg(help = "Path to private key file")]
+        name: String,
+
+        #[arg(short = 't', long, help = "Threshold (minimum shares needed to recover)")]
+        threshold: u8,
+
+        #[arg(short = 'n', long, help = "Total number of shares to create")]
+        shares: u8,
+
+        #[arg(short, long, help = "Output directory for shares")]
+        output: Option<String>,
+    },
+
+    #[command(about = "Recover RSA private key from shares")]
+    KeyRecover {
+        #[arg(help = "Paths to share files", required = true)]
+        share_paths: Vec<String>,
+
+        #[arg(short = 'n', long, help = "Output name for recovered key")]
+        name: String,
+    },
+
+    #[command(about = "Verify a share file's integrity")]
+    ShareVerify {
+        #[arg(help = "Path to share file")]
+        share_path: String,
+    },
+
     #[command(about = "Check-in to prevent file deletion (Dead Man's Switch)")]
     Checkin {
         #[arg(help = "Remote file path")]
@@ -283,6 +313,20 @@ fn main() -> Result<()> {
         }
         Commands::ListKeys => {
             commands::list_keys::execute()?;
+        }
+        Commands::KeySplit {
+            name,
+            threshold,
+            shares,
+            output,
+        } => {
+            commands::key_split::execute(&name, threshold, shares, output.as_deref())?;
+        }
+        Commands::KeyRecover { share_paths, name } => {
+            commands::key_recover::execute(share_paths, &name)?;
+        }
+        Commands::ShareVerify { share_path } => {
+            commands::share_verify::execute(&share_path)?;
         }
         Commands::Checkin { file_path } => {
             commands::checkin::execute(&file_path)?;
