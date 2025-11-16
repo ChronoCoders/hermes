@@ -64,6 +64,24 @@ pub fn decrypt_key_with_private(
         .map_err(|_e| HermesError::DecryptionFailed)
 }
 
+pub fn save_private_key(private_key: &RsaPrivateKey, path: &str) -> Result<()> {
+    let private_pem = private_key
+        .to_pkcs8_pem(LineEnding::LF)
+        .map_err(|e| HermesError::EncryptionFailed(format!("Private key encoding failed: {e}")))?;
+
+    fs::write(path, private_pem.as_bytes())?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(0o600);
+        fs::set_permissions(path, perms)?;
+    }
+
+    Ok(())
+}
+
 pub fn get_key_fingerprint(public_key: &RsaPublicKey) -> Result<String> {
     use sha2::{Digest, Sha256};
 

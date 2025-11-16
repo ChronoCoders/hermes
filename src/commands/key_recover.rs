@@ -2,6 +2,7 @@ use crate::crypto::rsa::save_private_key;
 use crate::error::{HermesError, Result};
 use crate::shamir::{recover_secret, Share};
 use crate::ui;
+use rsa::pkcs8::DecodePrivateKey;
 use rsa::RsaPrivateKey;
 use std::fs;
 
@@ -35,8 +36,8 @@ pub fn execute(share_paths: Vec<String>, output_name: &str) -> Result<()> {
 
     let recovered_bytes = recover_secret(&shares)?;
 
-    let private_key = RsaPrivateKey::from_pkcs1_der(&recovered_bytes).map_err(|e| {
-        HermesError::DecryptionFailed(format!("Failed to parse recovered key: {}", e))
+    let private_key = RsaPrivateKey::from_pkcs8_der(&recovered_bytes).map_err(|_e| {
+        HermesError::DecryptionFailed
     })?;
 
     ui::print_box_line(">> Saving recovered key...");
