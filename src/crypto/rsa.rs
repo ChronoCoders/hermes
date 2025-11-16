@@ -43,6 +43,24 @@ pub fn load_private_key(path: &str) -> Result<RsaPrivateKey> {
     RsaPrivateKey::from_pkcs8_pem(&pem).map_err(|_e| HermesError::DecryptionFailed)
 }
 
+pub fn save_private_key(private_key: &RsaPrivateKey, path: &str) -> Result<()> {
+    let private_pem = private_key
+        .to_pkcs8_pem(LineEnding::LF)
+        .map_err(|e| HermesError::EncryptionFailed(format!("Private key encoding failed: {e}")))?;
+
+    fs::write(path, private_pem.as_bytes())?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(0o600);
+        fs::set_permissions(path, perms)?;
+    }
+
+    Ok(())
+}
+
 pub fn load_public_key(path: &str) -> Result<RsaPublicKey> {
     let pem = fs::read_to_string(path)?;
     RsaPublicKey::from_public_key_pem(&pem).map_err(|_e| HermesError::DecryptionFailed)
