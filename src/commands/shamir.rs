@@ -59,12 +59,6 @@ pub fn split_secret(secret: &[u8], threshold: u8, total_shares: u8) -> Result<Ve
         ));
     }
 
-    if total_shares > 255 {
-        return Err(HermesError::ConfigError(
-            "Maximum 255 shares allowed".to_string(),
-        ));
-    }
-
     let prime = generate_prime();
     let mut shares = Vec::new();
 
@@ -156,7 +150,7 @@ fn generate_prime() -> BigInt {
     BigInt::from(257)
 }
 
-fn generate_coefficients(secret: u8, threshold: u8, prime: &BigInt) -> Vec<BigInt> {
+fn generate_coefficients(secret: u8, threshold: u8, _prime: &BigInt) -> Vec<BigInt> {
     let mut coefficients = vec![BigInt::from(secret)];
     let mut rng = rand::thread_rng();
 
