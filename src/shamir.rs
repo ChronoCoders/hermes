@@ -18,10 +18,10 @@ pub struct Share {
 impl Share {
     pub fn verify(&self) -> bool {
         let mut hasher = Sha256::new();
-        hasher.update(&[self.id]);
-        hasher.update(&[self.threshold]);
-        hasher.update(&[self.total_shares]);
-        hasher.update(&[self.x]);
+        hasher.update([self.id]);
+        hasher.update([self.threshold]);
+        hasher.update([self.total_shares]);
+        hasher.update([self.x]);
         hasher.update(&self.y);
         let calculated = format!("{:x}", hasher.finalize());
         calculated == self.checksum
@@ -37,10 +37,10 @@ impl Share {
 
     pub fn calculate_checksum(&mut self) {
         let mut hasher = Sha256::new();
-        hasher.update(&[self.id]);
-        hasher.update(&[self.threshold]);
-        hasher.update(&[self.total_shares]);
-        hasher.update(&[self.x]);
+        hasher.update([self.id]);
+        hasher.update([self.threshold]);
+        hasher.update([self.total_shares]);
+        hasher.update([self.x]);
         hasher.update(&self.y);
         self.checksum = format!("{:x}", hasher.finalize());
     }
@@ -62,8 +62,7 @@ pub fn split_secret(secret: &[u8], threshold: u8, total_shares: u8) -> Result<Ve
     let prime = generate_prime();
     let mut shares = Vec::new();
 
-    for byte_idx in 0..secret.len() {
-        let secret_byte = secret[byte_idx];
+    for (byte_idx, &secret_byte) in secret.iter().enumerate() {
         let coefficients = generate_coefficients(secret_byte, threshold);
 
         for share_id in 1..=total_shares {
@@ -178,14 +177,12 @@ fn evaluate_polynomial(coefficients: &[BigInt], x: i64, prime: &BigInt) -> u8 {
 fn lagrange_interpolation(points: &[(i64, u8)], prime: &BigInt) -> u8 {
     let mut result = BigInt::zero();
 
-    for i in 0..points.len() {
-        let (xi, yi) = points[i];
+    for (i, &(xi, yi)) in points.iter().enumerate() {
         let mut numerator = BigInt::one();
         let mut denominator = BigInt::one();
 
-        for j in 0..points.len() {
+        for (j, &(xj, _)) in points.iter().enumerate() {
             if i != j {
-                let (xj, _) = points[j];
                 numerator = (numerator * BigInt::from(-xj)) % prime;
                 denominator = (denominator * BigInt::from(xi - xj)) % prime;
             }
@@ -218,7 +215,7 @@ fn mod_inverse(a: &BigInt, m: &BigInt) -> BigInt {
     }
 
     if t < BigInt::zero() {
-        t = t + m;
+        t += m;
     }
 
     t
