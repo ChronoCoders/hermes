@@ -1,7 +1,8 @@
 use crate::crypto::rsa::load_private_key;
 use crate::error::Result;
-use crate::shamir::split_secret;
+use crate::commands::shamir::split_secret;
 use crate::ui;
+use rsa::pkcs8::EncodePrivateKey;
 use std::fs;
 use std::path::Path;
 
@@ -12,7 +13,9 @@ pub fn execute(name: &str, threshold: u8, total_shares: u8, output_dir: Option<&
     ui::print_box_line("");
 
     let private_key = load_private_key(name)?;
-    let key_bytes = private_key.to_pkcs8_der()?.as_bytes().to_vec();
+    let key_bytes = private_key.to_pkcs8_der()
+        .map_err(|e| crate::error::HermesError::EncryptionFailed(format!("Failed to encode key: {}", e)))?
+        .as_bytes().to_vec();
 
     ui::print_box_line(&format!(">> Key size: {} bytes", key_bytes.len()));
     ui::print_box_line(">> Splitting into shares...");

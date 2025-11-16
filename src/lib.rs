@@ -5,6 +5,5 @@ pub mod crypto;
 pub mod dms;
 pub mod error;
 pub mod progress;
-pub mod shamir;
 pub mod transfer;
 pub mod ui;
