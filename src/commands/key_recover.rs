@@ -1,5 +1,5 @@
 use crate::error::{HermesError, Result};
-use crate::commands::shamir::{recover_secret, Share};
+use crate::shamir::{recover_secret, Share};
 use crate::ui;
 use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey, LineEnding};
 use rsa::RsaPrivateKey;
