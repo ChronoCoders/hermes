@@ -64,7 +64,7 @@ pub fn split_secret(secret: &[u8], threshold: u8, total_shares: u8) -> Result<Ve
 
     for byte_idx in 0..secret.len() {
         let secret_byte = secret[byte_idx];
-        let coefficients = generate_coefficients(secret_byte, threshold, &prime);
+        let coefficients = generate_coefficients(secret_byte, threshold);
 
         for share_id in 1..=total_shares {
             let x = share_id;
@@ -150,7 +150,7 @@ fn generate_prime() -> BigInt {
     BigInt::from(257)
 }
 
-fn generate_coefficients(secret: u8, threshold: u8, _prime: &BigInt) -> Vec<BigInt> {
+fn generate_coefficients(secret: u8, threshold: u8) -> Vec<BigInt> {
     let mut coefficients = vec![BigInt::from(secret)];
     let mut rng = rand::thread_rng();
 
