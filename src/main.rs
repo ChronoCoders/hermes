@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 use hermes::commands;
 use hermes::error::Result;
 use hermes::ui;
@@ -12,28 +12,13 @@ pub struct Cli {
     command: Commands,
 }
 
-#[derive(Clone, ValueEnum)]
-pub enum Shell {
-    Bash,
-    Zsh,
-    Fish,
-    PowerShell,
-    Elvish,
-}
-
 #[derive(Subcommand)]
 enum Commands {
     #[command(about = "Initialize Hermes configuration")]
     Init,
 
     #[command(about = "Display current configuration")]
-    Config {
-        #[arg(long, help = "Validate configuration")]
-        validate: bool,
-
-        #[arg(long, help = "Test SFTP connection")]
-        test: bool,
-    },
+    Config,
 
     #[command(about = "List all encrypted files in vault")]
     List,
@@ -52,10 +37,10 @@ enum Commands {
 
     #[command(about = "Generate RSA keypair")]
     Keygen {
-        #[arg(help = "Key name/identifier")]
+        #[arg(help = "Name/identifier for this keypair")]
         name: String,
 
-        #[arg(short, long, help = "Output directory")]
+        #[arg(short, long, help = "Output directory for keys")]
         output: Option<String>,
     },
 
@@ -70,7 +55,7 @@ enum Commands {
 
     #[command(about = "Export your public key")]
     ExportPubkey {
-        #[arg(help = "Key name to export")]
+        #[arg(help = "Your keypair name")]
         name: String,
 
         #[arg(short, long, help = "Output file path")]
@@ -80,15 +65,27 @@ enum Commands {
     #[command(about = "List all RSA keys")]
     ListKeys,
 
-    // ============================================
-    // NEW: INTERACTIVE MODE (v1.1.0)
-    // ============================================
+    #[command(about = "Check-in to prevent file deletion (Dead Man's Switch)")]
+    Checkin {
+        #[arg(help = "Remote file path")]
+        file_path: String,
+    },
+
+    #[command(about = "Show Dead Man's Switch status for all files")]
+    DmsStatus,
+
+    #[command(about = "Disable Dead Man's Switch for a file")]
+    DmsDisable {
+        #[arg(help = "Remote file path")]
+        file_path: String,
+    },
+
     #[command(about = "Launch interactive mode (TUI)")]
     Interactive,
 
     #[command(about = "Encrypt and send a text message")]
     SendMsg {
-        #[arg(help = "Message to encrypt")]
+        #[arg(help = "Message text to encrypt")]
         message: String,
 
         #[arg(short, long, help = "Encryption password (if not using recipients)")]
@@ -110,7 +107,7 @@ enum Commands {
 
     #[command(about = "Receive and decrypt a text message")]
     RecvMsg {
-        #[arg(help = "Remote encrypted file name")]
+        #[arg(help = "Remote encrypted message name")]
         remote_file: String,
 
         #[arg(short, long, help = "Decryption password (if not using recipient key)")]
@@ -140,6 +137,9 @@ enum Commands {
 
         #[arg(long, value_delimiter = ',', help = "Recipients (comma-separated)")]
         recipients: Option<Vec<String>>,
+
+        #[arg(long, help = "Dead Man's Switch timeout in hours")]
+        dms: Option<u64>,
     },
 
     #[command(about = "Receive and decrypt a file")]
@@ -157,9 +157,6 @@ enum Commands {
         recipient: Option<String>,
     },
 
-    // ============================================
-    // NEW: CHUNKED FILE OPERATIONS (v1.2.0)
-    // ============================================
     #[command(about = "Encrypt and send large file in chunks (memory-efficient)")]
     SendFileChunked {
         #[arg(help = "Path to large file to encrypt")]
@@ -194,9 +191,6 @@ enum Commands {
         recipient: Option<String>,
     },
 
-    // ============================================
-    // BATCH OPERATIONS (v1.1.0)
-    // ============================================
     #[command(about = "Encrypt and send multiple files (batch operation)")]
     SendBatch {
         #[arg(help = "Paths to files to encrypt", required = true)]
@@ -218,11 +212,14 @@ enum Commands {
 
     #[command(about = "Encrypt and send entire directory")]
     SendDir {
-        #[arg(help = "Path to directory")]
+        #[arg(help = "Path to directory to encrypt")]
         dir_path: String,
 
         #[arg(short, long, help = "Encryption password (if not using recipients)")]
         password: Option<String>,
+
+        #[arg(short, long, help = "Include subdirectories")]
+        recursive: bool,
 
         #[arg(
             short = 't',
@@ -233,14 +230,11 @@ enum Commands {
 
         #[arg(long, value_delimiter = ',', help = "Recipients (comma-separated)")]
         recipients: Option<Vec<String>>,
-
-        #[arg(long, help = "Recursive directory traversal")]
-        recursive: bool,
     },
 
     #[command(about = "Receive and decrypt multiple files (batch operation)")]
     RecvBatch {
-        #[arg(help = "Remote encrypted file names", required = true)]
+        #[arg(help = "Pattern or list of remote files", required = true)]
         remote_files: Vec<String>,
 
         #[arg(short, long, help = "Decryption password (if not using recipient key)")]
@@ -263,12 +257,8 @@ fn main() -> Result<()> {
         Commands::Init => {
             commands::init::execute()?;
         }
-        Commands::Config { validate, test } => {
-            if validate || test {
-                commands::validate::execute(test)?;
-            } else {
-                commands::config::execute()?;
-            }
+        Commands::Config => {
+            commands::config::execute()?;
         }
         Commands::List => {
             commands::list::execute()?;
@@ -276,7 +266,6 @@ fn main() -> Result<()> {
         Commands::Completion { shell } => {
             use clap::CommandFactory;
             use clap_complete::generate;
-
             let mut cmd = Cli::command();
             generate(shell, &mut cmd, "hermes", &mut std::io::stdout());
         }
@@ -295,14 +284,18 @@ fn main() -> Result<()> {
         Commands::ListKeys => {
             commands::list_keys::execute()?;
         }
-
-        // ============================================
-        // NEW: INTERACTIVE MODE (v1.1.0)
-        // ============================================
+        Commands::Checkin { file_path } => {
+            commands::checkin::execute(&file_path)?;
+        }
+        Commands::DmsStatus => {
+            commands::dms_status::execute()?;
+        }
+        Commands::DmsDisable { file_path } => {
+            commands::dms_disable::execute(&file_path)?;
+        }
         Commands::Interactive => {
             commands::interactive::execute()?;
         }
-
         Commands::SendMsg {
             message,
             password,
@@ -331,6 +324,7 @@ fn main() -> Result<()> {
             remote_path,
             ttl,
             recipients,
+            dms,
         } => {
             commands::send_file::execute(
                 &file_path,
@@ -338,6 +332,7 @@ fn main() -> Result<()> {
                 remote_path.as_deref(),
                 ttl,
                 recipients,
+                dms,
             )?;
         }
         Commands::RecvFile {
@@ -353,10 +348,6 @@ fn main() -> Result<()> {
                 recipient.as_deref(),
             )?;
         }
-
-        // ============================================
-        // CHUNKED FILE OPERATIONS (v1.2.0)
-        // ============================================
         Commands::SendFileChunked {
             file_path,
             password,
@@ -365,7 +356,6 @@ fn main() -> Result<()> {
         } => {
             commands::send_file_chunked::execute(&file_path, password.as_deref(), ttl, recipients)?;
         }
-
         Commands::RecvFileChunked {
             remote_manifest,
             password,
@@ -379,10 +369,6 @@ fn main() -> Result<()> {
                 recipient.as_deref(),
             )?;
         }
-
-        // ============================================
-        // BATCH OPERATIONS (v1.1.0)
-        // ============================================
         Commands::SendBatch {
             file_paths,
             password,
@@ -391,13 +377,12 @@ fn main() -> Result<()> {
         } => {
             commands::send_batch::execute(file_paths, password.as_deref(), ttl, recipients)?;
         }
-
         Commands::SendDir {
             dir_path,
             password,
+            recursive,
             ttl,
             recipients,
-            recursive,
         } => {
             commands::send_dir::execute(
                 &dir_path,
@@ -407,7 +392,6 @@ fn main() -> Result<()> {
                 recursive,
             )?;
         }
-
         Commands::RecvBatch {
             remote_files,
             password,

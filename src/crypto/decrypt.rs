@@ -36,11 +36,10 @@ pub fn decrypt_data_multi(encrypted: &[u8], recipient_name: &str) -> Result<Vec<
         .join(".hermes")
         .join("keys");
 
-    let private_key_path = key_dir.join(format!("{}.pem", recipient_name));
+    let private_key_path = key_dir.join(format!("{recipient_name}.pem"));
     if !private_key_path.exists() {
         return Err(HermesError::ConfigError(format!(
-            "Private key not found for: {}",
-            recipient_name
+            "Private key not found for: {recipient_name}"
         )));
     }
 

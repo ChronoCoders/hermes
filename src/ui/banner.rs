@@ -1,4 +1,4 @@
-use colored::*;
+use colored::Colorize;
 
 pub fn print_banner() {
     println!(
@@ -57,11 +57,7 @@ pub fn print_banner() {
 pub fn print_box_start(title: &str) {
     println!(
         "{}",
-        format!(
-            "┌─[HERMES]─[{}]─────────────────────────────────────┐",
-            title
-        )
-        .cyan()
+        format!("┌─[HERMES]─[{title}]─────────────────────────────────────┐").cyan()
     );
 }
 
@@ -77,11 +73,11 @@ pub fn print_box_end() {
 }
 
 pub fn print_success(message: &str) {
-    println!("{}", format!("✓ {}", message).bright_green().bold());
+    println!("{}", format!("✓ {message}").bright_green().bold());
 }
 
 pub fn print_error(message: &str) {
-    println!("{}", format!("✗ {}", message).bright_red().bold());
+    println!("{}", format!("✗ {message}").bright_red().bold());
 }
 
 pub fn print_info(label: &str, value: &str) {
@@ -89,5 +85,5 @@ pub fn print_info(label: &str, value: &str) {
 }
 
 pub fn print_status(status: &str) {
-    println!("  Status: {}", format!("[{}]", status).bright_green());
+    println!("  Status: {}", format!("[{status}]").bright_green());
 }

@@ -50,12 +50,12 @@ pub fn execute(
             &client,
         ) {
             Ok(remote_path) => {
-                ui::print_box_line(&format!("   ✓ Success: {}", remote_path));
+                ui::print_box_line(&format!("   ✓ Success: {remote_path}"));
                 successful += 1;
                 results.push((file_path.clone(), true, Some(remote_path)));
             }
             Err(e) => {
-                ui::print_box_line(&format!("   ✗ Failed: {}", e));
+                ui::print_box_line(&format!("   ✗ Failed: {e}"));
                 failed += 1;
                 results.push((file_path.clone(), false, None));
             }
@@ -75,7 +75,7 @@ pub fn execute(
         println!("\n❌ Failed files:");
         for (path, success, _) in &results {
             if !success {
-                println!("   • {}", path);
+                println!("   • {path}");
             }
         }
     }
@@ -85,8 +85,7 @@ pub fn execute(
 
     if failed > 0 {
         Err(HermesError::ConfigError(format!(
-            "{} files failed to encrypt",
-            failed
+            "{failed} files failed to encrypt"
         )))
     } else {
         Ok(())

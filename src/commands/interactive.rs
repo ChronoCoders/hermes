@@ -1,7 +1,7 @@
 use crate::commands;
 use crate::error::Result;
 use crate::ui;
-use colored::*;
+use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 
 pub fn execute() -> Result<()> {
@@ -178,7 +178,7 @@ fn send_file_wizard() -> Result<()> {
     };
 
     println!();
-    commands::send_file::execute(&file_path, password.as_deref(), None, ttl, recipients)?;
+    commands::send_file::execute(&file_path, password.as_deref(), None, ttl, recipients, None)?;
 
     Ok(())
 }

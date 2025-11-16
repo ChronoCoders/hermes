@@ -1,5 +1,8 @@
+pub mod checkin;
 pub mod completion;
 pub mod config;
+pub mod dms_disable;
+pub mod dms_status;
 pub mod export_pubkey;
 pub mod import_pubkey;
 pub mod init;

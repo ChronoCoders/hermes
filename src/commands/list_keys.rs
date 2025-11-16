@@ -1,6 +1,6 @@
 use crate::crypto;
 use crate::error::Result;
-use colored::*;
+use colored::Colorize;
 use std::fs;
 
 pub fn execute() -> Result<()> {
@@ -29,7 +29,7 @@ pub fn execute() -> Result<()> {
         if let Ok(entries) = fs::read_dir(&key_dir) {
             let mut found_keys = false;
 
-            for entry in entries.filter_map(|e| e.ok()) {
+            for entry in entries.filter_map(std::result::Result::ok) {
                 let path = entry.path();
                 if path.extension().and_then(|s| s.to_str()) == Some("pub") {
                     found_keys = true;
@@ -73,7 +73,7 @@ pub fn execute() -> Result<()> {
         if let Ok(entries) = fs::read_dir(&recipients_dir) {
             let mut found_recipients = false;
 
-            for entry in entries.filter_map(|e| e.ok()) {
+            for entry in entries.filter_map(std::result::Result::ok) {
                 let path = entry.path();
                 if path.extension().and_then(|s| s.to_str()) == Some("pub") {
                     found_recipients = true;

@@ -36,7 +36,7 @@ pub fn execute(
     };
 
     if let Some(hours) = ttl_hours {
-        ui::print_box_line(&format!(">> Self-destruct: {} hours", hours));
+        ui::print_box_line(&format!(">> Self-destruct: {hours} hours"));
     }
 
     ui::print_box_line(">> Uploading to SFTP vault...");
@@ -61,7 +61,7 @@ pub fn execute(
     ui::print_info("Remote", &final_path);
     ui::print_info("Size", &format!("{} bytes", encrypted.len()));
     if let Some(hours) = ttl_hours {
-        ui::print_info("Expires", &format!("in {} hours", hours));
+        ui::print_info("Expires", &format!("in {hours} hours"));
     } else {
         ui::print_info("Expires", "Never");
     }

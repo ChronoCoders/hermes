@@ -20,10 +20,10 @@ pub fn execute(name: &str, output_dir: Option<&str>) -> Result<()> {
 
     std::fs::create_dir_all(&key_dir)?;
 
-    let private_key_path = key_dir.join(format!("{}.pem", name));
-    let public_key_path = key_dir.join(format!("{}.pub", name));
+    let private_key_path = key_dir.join(format!("{name}.pem"));
+    let public_key_path = key_dir.join(format!("{name}.pub"));
 
-    ui::print_box_line(&format!(">> Generating RSA-4096 keypair for: {}", name));
+    ui::print_box_line(&format!(">> Generating RSA-4096 keypair for: {name}"));
     ui::print_box_line(">> This may take a moment...");
 
     let spinner = progress::create_keygen_spinner();

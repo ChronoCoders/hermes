@@ -26,6 +26,7 @@ pub struct ChunkInfo {
 }
 
 impl ChunkManifest {
+    #[must_use]
     pub fn new(filename: String, total_size: u64) -> Self {
         let total_chunks = ((total_size as f64) / (CHUNK_SIZE as f64)).ceil() as usize;
 

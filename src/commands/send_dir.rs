@@ -23,14 +23,13 @@ pub fn execute(
 
     if !path.is_dir() {
         return Err(HermesError::ConfigError(format!(
-            "Not a directory: {}",
-            dir_path
+            "Not a directory: {dir_path}"
         )));
     }
 
     ui::print_box_start("DIRECTORY_ENCRYPT");
-    ui::print_box_line(&format!(">> Directory: {}", dir_path));
-    ui::print_box_line(&format!(">> Recursive: {}", recursive));
+    ui::print_box_line(&format!(">> Directory: {dir_path}"));
+    ui::print_box_line(&format!(">> Recursive: {recursive}"));
     ui::print_box_line("");
 
     // Collect all files
@@ -75,12 +74,12 @@ pub fn execute(
             &client,
         ) {
             Ok(remote_path) => {
-                ui::print_box_line(&format!("   ✓ {}", remote_path));
+                ui::print_box_line(&format!("   ✓ {remote_path}"));
                 successful += 1;
                 results.push((file_path.clone(), true, Some(remote_path)));
             }
             Err(e) => {
-                ui::print_box_line(&format!("   ✗ {}", e));
+                ui::print_box_line(&format!("   ✗ {e}"));
                 failed += 1;
                 results.push((file_path.clone(), false, None));
             }
@@ -110,8 +109,7 @@ pub fn execute(
 
     if failed > 0 {
         Err(HermesError::ConfigError(format!(
-            "{} files failed to encrypt",
-            failed
+            "{failed} files failed to encrypt"
         )))
     } else {
         Ok(())
