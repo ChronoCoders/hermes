@@ -119,6 +119,24 @@ enum Commands {
         share_path: String,
     },
 
+    #[command(about = "Rotate keypair (generate new keys, optionally archive old)")]
+    KeyRotate {
+        #[arg(help = "Key name to rotate")]
+        name: String,
+
+        #[arg(long, help = "Archive old keys before rotation")]
+        archive: bool,
+
+        #[arg(long, help = "Also rotate Kyber (PQC) keys")]
+        pqc: bool,
+
+        #[arg(long, help = "Also rotate Dilithium (signing) keys")]
+        sign: bool,
+    },
+
+    #[command(about = "List archived keys from previous rotations")]
+    ListArchivedKeys,
+
     #[command(about = "Sign a file with Dilithium (post-quantum signature)")]
     SignFile {
         #[arg(help = "Path to file to sign")]
@@ -389,6 +407,17 @@ fn main() -> Result<()> {
         }
         Commands::ShareVerify { share_path } => {
             commands::share_verify::execute(&share_path)?;
+        }
+        Commands::KeyRotate {
+            name,
+            archive,
+            pqc,
+            sign,
+        } => {
+            commands::key_rotate::execute(&name, archive, pqc, sign)?;
+        }
+        Commands::ListArchivedKeys => {
+            commands::key_list_archived::execute()?;
         }
         Commands::SignFile {
             file_path,
