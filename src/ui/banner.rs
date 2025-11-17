@@ -27,7 +27,8 @@ pub fn print_banner() {
 
 pub fn print_box_start(title: &str) {
     let header = format!("─[HERMES]─[{title}]─");
-    let padding_len = INNER_WIDTH.saturating_sub(header.len());
+    let header_char_len = header.chars().count();
+    let padding_len = INNER_WIDTH.saturating_sub(header_char_len);
     let padding = "─".repeat(padding_len);
     println!("{}", format!("┌{header}{padding}┐").cyan());
 }
