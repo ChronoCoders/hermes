@@ -5,6 +5,165 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-11-17
+
+### Added
+- 🖼️ **Steganography Support**
+  - LSB (Least Significant Bit) steganography for hiding data in PNG images
+  - `hermes stego-hide` - Embed encrypted files into cover images
+  - `hermes stego-reveal` - Extract hidden data from steganographic images
+  - `hermes stego-capacity` - Check image capacity for hidden data
+  - Support for both password and recipient-based encryption
+  - Magic header verification (`HRMSSTEG`) for data integrity
+  - Analysis tools for detecting steganographic content
+  - Image capacity calculation (approximately 37.5% of pixel count in bytes)
+
+### Technical Details
+- Uses RGB channel LSB modification (alpha channel preserved)
+- 4-byte length prefix for data size validation
+- Imperceptible to human eye
+
+### Usage
+```bash
+# Hide secret file in image
+hermes stego-hide secret.txt --cover photo.png --output innocent.png -p password
+
+# Extract hidden file
+hermes stego-reveal innocent.png --output recovered.txt -p password
+
+# Check capacity
+hermes stego-capacity photo.png --analyze
+```
+
+## [2.2.0] - 2025-11-17
+
+### Added
+- 🔄 **Key Rotation Mechanism**
+  - `hermes key-rotate` - Securely rotate cryptographic keys
+  - `hermes list-archived-keys` - View history of rotated keys
+  - Automatic archiving with timestamped backups
+  - Support for rotating RSA, Kyber (PQC), and Dilithium keys
+  - Rotation metadata tracking for audit purposes
+  - Backward compatibility preserved for old encrypted files
+
+### Security Features
+- Archive directory at `~/.hermes/keys/archive/`
+- Timestamp-based backup naming (e.g., `alice_20251117_143022.pem`)
+- Rotation metadata with fingerprint tracking
+- Warning to distribute new public keys after rotation
+
+### Usage
+```bash
+# Rotate all keys with archiving
+hermes key-rotate alice --archive --pqc --sign
+
+# View archived keys
+hermes list-archived-keys
+```
+
+## [2.1.0] - 2025-11-17
+
+### Added
+- 🔏 **Post-Quantum Digital Signatures**
+  - Dilithium-5 (NIST PQC Level 5 security)
+  - `hermes sign-file` - Create quantum-resistant signatures
+  - `hermes verify-signature` - Verify and extract signed files
+  - `hermes keygen --sign` - Generate Dilithium signing keypairs
+  - SHA-256 fingerprinting for Dilithium keys
+  - PEM-formatted key storage
+
+### Cryptographic Properties
+- Algorithm: Dilithium-5 (CRYSTALS-Dilithium)
+- Security level: NIST Level 5 (256-bit quantum security)
+- Public key size: ~2.5 KB
+- Signature size: ~4.5 KB
+
+### Usage
+```bash
+# Generate signing keypair
+hermes keygen alice --sign
+
+# Sign a file
+hermes sign-file document.pdf --key alice
+
+# Verify and extract
+hermes verify-signature document.pdf.sig --signer alice --output verified.pdf
+```
+
+## [2.0.0] - 2025-11-17
+
+### Added
+- 🛡️ **Post-Quantum Cryptography (Hybrid Encryption)**
+  - Kyber-1024 (ML-KEM) post-quantum key encapsulation
+  - Hybrid RSA-4096 + Kyber-1024 encryption
+  - `hermes keygen --pqc` - Generate Kyber keypairs
+  - `hermes send-file --pqc` - Use hybrid encryption
+  - `hermes import-kyber-pubkey` - Import recipient's Kyber key
+  - `hermes export-kyber-pubkey` - Export your Kyber key
+  - Package format version 0x02 with PQC flag
+  - Backward compatibility with v1.x packages
+
+### Security Architecture
+- **Defense in Depth**: Both RSA and Kyber keys must match for decryption
+- **Future-Proof**: Protected against quantum computer attacks
+- **Interoperable**: Old clients can still decrypt v1.x packages
+
+### Technical Details
+- Primary: RSA-4096 with OAEP padding
+- Post-Quantum: Kyber-1024 (ML-KEM) KEM
+- Key Encapsulation: XOR-based with Kyber shared secret
+- Package flags: `FLAG_PQC_ENABLED = 0b00000100`
+
+### Migration Guide
+```bash
+# Generate PQC-enabled keypair
+hermes keygen alice --pqc
+
+# Export Kyber public key
+hermes export-kyber-pubkey alice --output alice_kyber.pub
+
+# Import recipient's Kyber key
+hermes import-kyber-pubkey bob bob_kyber.pub
+
+# Send with hybrid encryption
+hermes send-file sensitive.zip --recipients bob --pqc
+```
+
+### Breaking Changes
+- Package format version bumped to 0x02
+- New flag bit for PQC-enabled packages
+- Old v1.x clients cannot decrypt v2.x PQC packages (but can decrypt non-PQC v2.x packages)
+
+## [1.3.1] - 2025-11-17
+
+### Added
+- 🔑 **Shamir's Secret Sharing**
+  - `hermes key-split` - Split private keys into multiple shares
+  - `hermes key-recover` - Reconstruct keys from threshold shares
+  - `hermes share-verify` - Verify share file integrity
+  - Threshold cryptography (k-of-n scheme)
+  - SHA-256 checksums for each share
+  - JSON-formatted share files with metadata
+  - GF(256) field arithmetic for cryptographic security
+
+### Use Cases
+- Distributed key custody
+- Emergency key recovery
+- Multi-party authorization
+- Secure key backup
+
+### Usage
+```bash
+# Split key into 5 shares, needing 3 to recover
+hermes key-split alice -t 3 -n 5
+
+# Recover with any 3 shares
+hermes key-recover share1.json share2.json share3.json -n alice
+
+# Verify a share
+hermes share-verify alice_share_1.json
+```
+
 ## [1.1.0] - 2025-01-26
 
 ### Added
@@ -139,6 +298,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Message encryption/decryption
 - File encryption/decryption
 
+[2.3.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.3.0
+[2.2.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.2.0
+[2.1.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.1.0
+[2.0.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.0.0
+[1.3.1]: https://github.com/ChronoCoders/hermes/releases/tag/v1.3.1
 [1.1.0]: https://github.com/ChronoCoders/hermes/releases/tag/v1.1.0
 [1.0.1]: https://github.com/ChronoCoders/hermes/releases/tag/v1.0.1
 [1.0.0]: https://github.com/ChronoCoders/hermes/releases/tag/v1.0.0
