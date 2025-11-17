@@ -27,5 +27,8 @@ pub mod send_file_chunked;
 pub mod send_msg;
 pub mod share_verify;
 pub mod sign_file;
+pub mod stego_capacity;
+pub mod stego_hide;
+pub mod stego_reveal;
 pub mod validate;
 pub mod verify_signature;

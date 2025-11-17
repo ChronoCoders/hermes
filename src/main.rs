@@ -345,6 +345,48 @@ enum Commands {
         #[arg(long, help = "Recipient name (for multi-recipient files)")]
         recipient: Option<String>,
     },
+
+    #[command(about = "Hide encrypted file data in an image (steganography)")]
+    StegoHide {
+        #[arg(help = "Path to file to hide")]
+        file_path: String,
+
+        #[arg(short, long, help = "Cover image path (PNG)")]
+        cover: String,
+
+        #[arg(short, long, help = "Output stego-image path")]
+        output: String,
+
+        #[arg(short, long, help = "Encryption password (if not using recipients)")]
+        password: Option<String>,
+
+        #[arg(long, value_delimiter = ',', help = "Recipients (comma-separated)")]
+        recipients: Option<Vec<String>>,
+    },
+
+    #[command(about = "Extract and decrypt hidden data from an image")]
+    StegoReveal {
+        #[arg(help = "Path to stego-image")]
+        stego_image: String,
+
+        #[arg(short, long, help = "Output file path")]
+        output: String,
+
+        #[arg(short, long, help = "Decryption password (if not using recipient key)")]
+        password: Option<String>,
+
+        #[arg(long, help = "Recipient name (for multi-recipient data)")]
+        recipient: Option<String>,
+    },
+
+    #[command(about = "Check image capacity for steganography")]
+    StegoCapacity {
+        #[arg(help = "Path to image")]
+        image_path: String,
+
+        #[arg(long, help = "Perform full analysis including detection")]
+        analyze: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -555,6 +597,40 @@ fn main() -> Result<()> {
                 output.as_deref(),
                 recipient.as_deref(),
             )?;
+        }
+        Commands::StegoHide {
+            file_path,
+            cover,
+            output,
+            password,
+            recipients,
+        } => {
+            commands::stego_hide::execute(
+                &file_path,
+                &cover,
+                &output,
+                password.as_deref(),
+                recipients,
+            )?;
+        }
+        Commands::StegoReveal {
+            stego_image,
+            output,
+            password,
+            recipient,
+        } => {
+            commands::stego_reveal::execute(
+                &stego_image,
+                &output,
+                password.as_deref(),
+                recipient.as_deref(),
+            )?;
+        }
+        Commands::StegoCapacity {
+            image_path,
+            analyze,
+        } => {
+            commands::stego_capacity::execute(&image_path, analyze)?;
         }
     }
 

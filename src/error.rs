@@ -41,6 +41,9 @@ pub enum HermesError {
     #[error("Key generation failed: {0}")]
     KeyGenerationFailed(String),
 
+    #[error("Steganography error: {0}")]
+    SteganographyError(String),
+
     #[error("Invalid configuration file")]
     InvalidConfig,
 
