@@ -141,6 +141,7 @@ fn process_single_file(
             Some(filename.to_string()),
             ttl_hours,
             Some(recips.clone()),
+            false,
         )?
     } else if let Some(pwd) = password {
         crypto::encrypt_data(&plaintext, pwd, Some(filename.to_string()), ttl_hours)?

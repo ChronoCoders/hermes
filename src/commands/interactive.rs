@@ -178,7 +178,7 @@ fn send_file_wizard() -> Result<()> {
     };
 
     println!();
-    commands::send_file::execute(&file_path, password.as_deref(), None, ttl, recipients, None)?;
+    commands::send_file::execute(&file_path, password.as_deref(), None, ttl, recipients, None, false)?;
 
     Ok(())
 }
@@ -446,7 +446,7 @@ fn key_management_wizard() -> Result<()> {
                 .interact_text()?;
 
             println!();
-            commands::keygen::execute(&name, None)?;
+            commands::keygen::execute(&name, None, false)?;
         }
         1 => {
             let name: String = Input::with_theme(&ColorfulTheme::default())

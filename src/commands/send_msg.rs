@@ -25,6 +25,7 @@ pub fn execute(
             None,
             ttl_hours,
             Some(recips),
+            false, // PQC not yet supported for messages
         )?
     } else if let Some(pwd) = password {
         ui::print_box_line(">> Encrypting message...");

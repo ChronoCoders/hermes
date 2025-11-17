@@ -38,6 +38,9 @@ pub enum HermesError {
     #[error("Key derivation failed")]
     KeyDerivationFailed,
 
+    #[error("Key generation failed: {0}")]
+    KeyGenerationFailed(String),
+
     #[error("Invalid configuration file")]
     InvalidConfig,
 

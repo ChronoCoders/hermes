@@ -51,11 +51,42 @@ pub fn decrypt_data_multi(encrypted: &[u8], recipient_name: &str) -> Result<Vec<
         .find(|r| r.name == recipient_name)
         .ok_or(HermesError::DecryptionFailed)?;
 
-    let data_key_bytes =
-        crate::crypto::decrypt_key_with_private(&recipient.encrypted_key, &private_key)?;
+    // Hybrid decryption: Try Kyber first if PQC is enabled, then verify with RSA
+    let data_key = if package.is_pqc_enabled() && recipient.pq_encrypted_key.is_some() {
+        let kyber_key_path = key_dir.join(format!("{recipient_name}_kyber.pem"));
+        if !kyber_key_path.exists() {
+            return Err(HermesError::ConfigError(format!(
+                "Kyber private key not found for: {recipient_name}. This file requires PQC keys."
+            )));
+        }
 
-    let mut data_key = [0u8; 32];
-    data_key.copy_from_slice(&data_key_bytes);
+        let kyber_secret = crate::crypto::load_kyber_secret_key(kyber_key_path.to_str().unwrap())?;
+        let pq_encrypted = recipient.pq_encrypted_key.as_ref().unwrap();
+
+        // Decrypt with Kyber
+        let kyber_key = crate::crypto::decrypt_with_kyber(pq_encrypted, &kyber_secret)?;
+
+        // Also decrypt with RSA for verification (hybrid security)
+        let rsa_key_bytes =
+            crate::crypto::decrypt_key_with_private(&recipient.encrypted_key, &private_key)?;
+        let mut rsa_key = [0u8; 32];
+        rsa_key.copy_from_slice(&rsa_key_bytes);
+
+        // Both keys must match for hybrid security
+        if kyber_key != rsa_key {
+            return Err(HermesError::DecryptionFailed);
+        }
+
+        kyber_key
+    } else {
+        // Legacy v1 or non-PQC: Use RSA only
+        let data_key_bytes =
+            crate::crypto::decrypt_key_with_private(&recipient.encrypted_key, &private_key)?;
+
+        let mut key = [0u8; 32];
+        key.copy_from_slice(&data_key_bytes);
+        key
+    };
 
     decrypt_with_key(encrypted, &data_key)
 }
