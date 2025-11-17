@@ -35,7 +35,7 @@ pub fn execute() -> Result<()> {
                         let archive_id = format!("{}_{}", key_name, timestamp);
                         archives
                             .entry(archive_id)
-                            .or_insert_with(Vec::new)
+                            .or_default()
                             .push(filename);
                     }
                 }
