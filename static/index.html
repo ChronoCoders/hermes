@@ -37,6 +37,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .logo {
@@ -49,6 +51,7 @@
             display: flex;
             gap: 1rem;
             font-size: 0.9rem;
+            flex-wrap: wrap;
         }
 
         .status-item {
@@ -85,6 +88,11 @@
 
         .tab:hover {
             color: var(--text);
+        }
+
+        .tab:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
         }
 
         .tab.active {
@@ -158,10 +166,16 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 0.95rem;
         }
 
         button:hover {
             background: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         button.danger {
@@ -171,12 +185,19 @@
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        button:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
 
         .checkbox-group {
             display: flex;
             gap: 1rem;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .checkbox-group label {
@@ -185,6 +206,7 @@
             gap: 0.5rem;
             margin: 0;
             color: var(--text);
+            white-space: nowrap;
         }
 
         input[type="checkbox"] {
@@ -253,6 +275,8 @@
             font-size: 0.9rem;
             word-break: break-all;
             white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .result.success {
@@ -262,6 +286,23 @@
         .result.error {
             border-color: var(--danger);
             color: var(--danger);
+        }
+
+        .result::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        .result::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .result::-webkit-scrollbar-thumb:hover {
+            background: var(--text-dim);
         }
 
         .grid {
@@ -274,18 +315,49 @@
             .grid {
                 grid-template-columns: 1fr;
             }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+            }
+
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
         }
 
         .file-input-wrapper {
             position: relative;
+            margin-bottom: 1rem;
         }
 
         .file-input {
             position: absolute;
+            top: 0;
+            left: 0;
             opacity: 0;
             width: 100%;
             height: 100%;
             cursor: pointer;
+            z-index: 10;
         }
 
         .file-input-label {
@@ -296,10 +368,12 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
+            color: var(--text-dim);
         }
 
         .file-input-label:hover {
             border-color: var(--accent);
+            color: var(--text);
         }
 
         .loading {
