@@ -1,11 +1,12 @@
 [package]
 name = "hermes"
-version = "2.3.0"
+version = "2.4.0"
 edition = "2021"
 
 [dependencies]
 aes-gcm = "0.10"
 argon2 = "0.5"
+axum = "0.7"
 base64 = "0.22"
 pqc_kyber = "0.7"
 pqcrypto-dilithium = "0.5"
@@ -29,7 +30,9 @@ serde_json = "1.0"
 sha2 = "0.10"
 ssh2 = "0.9"
 thiserror = "1.0"
+tokio = { version = "1.0", features = ["full"] }
 toml = "0.8"
+tower-http = { version = "0.5", features = ["cors", "fs"] }
 
 [dev-dependencies]
 tempfile = "3.15"

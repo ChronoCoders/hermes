@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hermes - Secure File Transfer</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --border: #333;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --accent: #00ff88;
+            --accent-dim: #00aa55;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-card);
+            border-bottom: 2px solid var(--accent);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .status {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .status-item {
+            color: var(--text-dim);
+        }
+
+        .status-value {
+            color: var(--accent);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: -1px;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            color: var(--accent);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-dim);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg-dark);
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--accent);
+        }
+
+        button.danger {
+            background: var(--danger);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+            color: var(--text);
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+        }
+
+        .key-list {
+            list-style: none;
+        }
+
+        .key-item {
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .key-info {
+            flex: 1;
+        }
+
+        .key-name {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .key-details {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 0.25rem;
+        }
+
+        .key-badges {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .badge.pqc {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .badge.sign {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .result {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .result.success {
+            border-color: var(--accent);
+        }
+
+        .result.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 2rem;
+            border: 2px dashed var(--border);
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-input-label:hover {
+            border-color: var(--accent);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-dim);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">[HERMES] Military-Grade Secure Transfer</div>
+        <div class="status">
+            <span class="status-item">Version: <span class="status-value" id="version">-</span></span>
+            <span class="status-item">Keys: <span class="status-value" id="keyCount">0</span></span>
+            <span class="status-item">Recipients: <span class="status-value" id="recipientCount">0</span></span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-panel="dashboard">Dashboard</button>
+            <button class="tab" data-panel="keys">Key Management</button>
+            <button class="tab" data-panel="encrypt">Encrypt</button>
+            <button class="tab" data-panel="decrypt">Decrypt</button>
+            <button class="tab" data-panel="sign">Sign & Verify</button>
+            <button class="tab" data-panel="stego">Steganography</button>
+        </div>
+
+        <!-- Dashboard Panel -->
+        <div id="dashboard" class="panel active">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">System Status</div>
+                    <div id="systemStatus">Loading...</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Configuration</div>
+                    <div id="configInfo">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keys Panel -->
+        <div id="keys" class="panel">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Generate New Keypair</div>
+                    <div class="form-group">
+                        <label for="keyName">Key Name</label>
+                        <input type="text" id="keyName" placeholder="e.g., alice">
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="genPqc"> Post-Quantum (Kyber)
+                        </label>
+                        <label>
+                            <input type="checkbox" id="genSign"> Digital Signatures (Dilithium)
+                        </label>
+                    </div>
+                    <br>
+                    <button onclick="generateKey()">Generate Keys</button>
+                    <div id="genKeyResult"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Rotate Existing Key</div>
+                    <div class="form-group">
+                        <label for="rotateKeyName">Key Name</label>
+                        <input type="text" id="rotateKeyName" placeholder="e.g., alice">
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="rotateArchive" checked> Archive Old Keys
+                        </label>
+                        <label>
+                            <input type="checkbox" id="rotatePqc"> Rotate PQC Keys
+                        </label>
+                        <label>
+                            <input type="checkbox" id="rotateSign"> Rotate Signing Keys
+                        </label>
+                    </div>
+                    <br>
+                    <button onclick="rotateKey()">Rotate Key</button>
+                    <div id="rotateKeyResult"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Your Keys</div>
+                <ul class="key-list" id="keysList">
+                    <li>Loading...</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Archived Keys</div>
+                <ul class="key-list" id="archivedKeysList">
+                    <li>Loading...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Encrypt Panel -->
+        <div id="encrypt" class="panel">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Encrypt Message</div>
+                    <div class="form-group">
+                        <label for="encryptMessage">Message</label>
+                        <textarea id="encryptMessage" placeholder="Enter message to encrypt..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="encryptPassword">Password (or leave empty for recipient-based)</label>
+                        <input type="password" id="encryptPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="encryptRecipients">Recipients (comma-separated, for key-based encryption)</label>
+                        <input type="text" id="encryptRecipients" placeholder="e.g., bob, charlie">
+                    </div>
+                    <button onclick="encryptMessage()">Encrypt Message</button>
+                    <div id="encryptMsgResult"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Encrypt File</div>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="file-input" id="encryptFileInput" onchange="handleFileSelect(this)">
+                        <div class="file-input-label" id="encryptFileLabel">
+                            Drop file here or click to select
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="encryptFilePassword">Password (or leave empty for recipient-based)</label>
+                        <input type="password" id="encryptFilePassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="encryptFileRecipients">Recipients (comma-separated)</label>
+                        <input type="text" id="encryptFileRecipients" placeholder="e.g., bob, charlie">
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="encryptFilePqc"> Use Post-Quantum Encryption
+                        </label>
+                    </div>
+                    <br>
+                    <button onclick="encryptFile()">Encrypt File</button>
+                    <div id="encryptFileResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decrypt Panel -->
+        <div id="decrypt" class="panel">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Decrypt Message</div>
+                    <div class="form-group">
+                        <label for="decryptData">Encrypted Data (base64)</label>
+                        <textarea id="decryptData" placeholder="Paste encrypted base64 data..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="decryptPassword">Password (or leave empty for key-based)</label>
+                        <input type="password" id="decryptPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="decryptRecipient">Your Key Name (for key-based decryption)</label>
+                        <input type="text" id="decryptRecipient" placeholder="e.g., alice">
+                    </div>
+                    <button onclick="decryptMessage()">Decrypt Message</button>
+                    <div id="decryptMsgResult"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Decrypt File</div>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="file-input" id="decryptFileInput" onchange="handleDecryptFileSelect(this)">
+                        <div class="file-input-label" id="decryptFileLabel">
+                            Drop encrypted file here or click to select
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="decryptFilePassword">Password (or leave empty for key-based)</label>
+                        <input type="password" id="decryptFilePassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="decryptFileRecipient">Your Key Name</label>
+                        <input type="text" id="decryptFileRecipient" placeholder="e.g., alice">
+                    </div>
+                    <button onclick="decryptFile()">Decrypt File</button>
+                    <div id="decryptFileResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sign & Verify Panel -->
+        <div id="sign" class="panel">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Sign Data (Dilithium-5)</div>
+                    <div class="form-group">
+                        <label for="signData">Data to Sign</label>
+                        <textarea id="signData" placeholder="Enter data to sign..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="signKeyName">Your Key Name</label>
+                        <input type="text" id="signKeyName" placeholder="e.g., alice">
+                    </div>
+                    <button onclick="signData()">Sign Data</button>
+                    <div id="signResult"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Verify Signature</div>
+                    <div class="form-group">
+                        <label for="verifyData">Signed Data (base64)</label>
+                        <textarea id="verifyData" placeholder="Paste signed base64 data..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="verifySignerName">Signer's Name</label>
+                        <input type="text" id="verifySignerName" placeholder="e.g., alice">
+                    </div>
+                    <button onclick="verifySignature()">Verify Signature</button>
+                    <div id="verifyResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Steganography Panel -->
+        <div id="stego" class="panel">
+            <div class="card">
+                <div class="card-title">Image Capacity Analysis</div>
+                <div class="file-input-wrapper">
+                    <input type="file" class="file-input" id="stegoImageInput" accept="image/png" onchange="analyzeStegoCapacity(this)">
+                    <div class="file-input-label">
+                        Drop PNG image here or click to select
+                    </div>
+                </div>
+                <div id="stegoCapacityResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.panel).classList.add('active');
+            });
+        });
+
+        // Load initial data
+        async function loadStatus() {
+            try {
+                const resp = await fetch('/api/status');
+                const data = await resp.json();
+                if (data.success) {
+                    document.getElementById('version').textContent = data.data.version;
+                    document.getElementById('keyCount').textContent = data.data.keys_count;
+                    document.getElementById('recipientCount').textContent = data.data.recipients_count;
+
+                    document.getElementById('systemStatus').innerHTML = `
+                        <p><strong>Status:</strong> ${data.data.initialized ? 'Initialized' : 'Not Initialized'}</p>
+                        <p><strong>Version:</strong> ${data.data.version}</p>
+                        <p><strong>Your Keys:</strong> ${data.data.keys_count}</p>
+                        <p><strong>Recipients:</strong> ${data.data.recipients_count}</p>
+                    `;
+                }
+            } catch (e) {
+                console.error('Failed to load status:', e);
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                const resp = await fetch('/api/config');
+                const data = await resp.json();
+                if (data.success) {
+                    document.getElementById('configInfo').innerHTML = `
+                        <p><strong>Home:</strong> ${data.data.home_dir}</p>
+                        <p><strong>Keys:</strong> ${data.data.keys_dir}</p>
+                        <p><strong>Recipients:</strong> ${data.data.recipients_dir}</p>
+                        <p><strong>Config:</strong> ${data.data.config_file}</p>
+                    `;
+                }
+            } catch (e) {
+                console.error('Failed to load config:', e);
+            }
+        }
+
+        async function loadKeys() {
+            try {
+                const resp = await fetch('/api/keys');
+                const data = await resp.json();
+                if (data.success) {
+                    const list = document.getElementById('keysList');
+                    if (data.data.length === 0) {
+                        list.innerHTML = '<li class="key-item">No keys found. Generate one first.</li>';
+                    } else {
+                        list.innerHTML = data.data.map(key => `
+                            <li class="key-item">
+                                <div class="key-info">
+                                    <div class="key-name">${key.name}</div>
+                                    <div class="key-details">${key.key_type} - ${key.fingerprint}</div>
+                                    <div class="key-badges">
+                                        ${key.has_pqc ? '<span class="badge pqc">PQC</span>' : ''}
+                                        ${key.has_signing ? '<span class="badge sign">SIGN</span>' : ''}
+                                    </div>
+                                </div>
+                            </li>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load keys:', e);
+            }
+        }
+
+        async function loadArchivedKeys() {
+            try {
+                const resp = await fetch('/api/keys/archived');
+                const data = await resp.json();
+                if (data.success) {
+                    const list = document.getElementById('archivedKeysList');
+                    if (data.data.length === 0) {
+                        list.innerHTML = '<li class="key-item">No archived keys found.</li>';
+                    } else {
+                        list.innerHTML = data.data.map(archive => `
+                            <li class="key-item">
+                                <div class="key-info">
+                                    <div class="key-name">${archive.archive_id}</div>
+                                    <div class="key-details">${archive.files.join(', ')}</div>
+                                </div>
+                            </li>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load archived keys:', e);
+            }
+        }
+
+        async function generateKey() {
+            const name = document.getElementById('keyName').value;
+            if (!name) {
+                alert('Please enter a key name');
+                return;
+            }
+
+            const result = document.getElementById('genKeyResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            try {
+                const resp = await fetch('/api/keys/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        pqc: document.getElementById('genPqc').checked,
+                        sign: document.getElementById('genSign').checked
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    result.innerHTML = '<div class="result success">Key generated successfully!</div>';
+                    loadKeys();
+                    loadStatus();
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function rotateKey() {
+            const name = document.getElementById('rotateKeyName').value;
+            if (!name) {
+                alert('Please enter a key name');
+                return;
+            }
+
+            const result = document.getElementById('rotateKeyResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            try {
+                const resp = await fetch('/api/keys/rotate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        archive: document.getElementById('rotateArchive').checked,
+                        pqc: document.getElementById('rotatePqc').checked,
+                        sign: document.getElementById('rotateSign').checked
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    result.innerHTML = '<div class="result success">Key rotated successfully!</div>';
+                    loadKeys();
+                    loadArchivedKeys();
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function encryptMessage() {
+            const message = document.getElementById('encryptMessage').value;
+            const password = document.getElementById('encryptPassword').value;
+            const recipientsStr = document.getElementById('encryptRecipients').value;
+
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+
+            if (!password && !recipientsStr) {
+                alert('Please provide either a password or recipients');
+                return;
+            }
+
+            const result = document.getElementById('encryptMsgResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            const body = { message };
+            if (password) {
+                body.password = password;
+            } else {
+                body.recipients = recipientsStr.split(',').map(s => s.trim()).filter(s => s);
+            }
+
+            try {
+                const resp = await fetch('/api/encrypt/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="result success">
+                            <strong>Encrypted (${data.data.size} bytes):</strong><br>
+                            ${data.data.encrypted}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function decryptMessage() {
+            const encrypted = document.getElementById('decryptData').value;
+            const password = document.getElementById('decryptPassword').value;
+            const recipient = document.getElementById('decryptRecipient').value;
+
+            if (!encrypted) {
+                alert('Please enter encrypted data');
+                return;
+            }
+
+            if (!password && !recipient) {
+                alert('Please provide either a password or your key name');
+                return;
+            }
+
+            const result = document.getElementById('decryptMsgResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            const body = { encrypted };
+            if (password) {
+                body.password = password;
+            } else {
+                body.recipient = recipient;
+            }
+
+            try {
+                const resp = await fetch('/api/decrypt/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="result success">
+                            <strong>Decrypted Message:</strong><br>
+                            ${data.data.message}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        let selectedFile = null;
+        let selectedDecryptFile = null;
+
+        function handleFileSelect(input) {
+            if (input.files.length > 0) {
+                selectedFile = input.files[0];
+                document.getElementById('encryptFileLabel').textContent = `Selected: ${selectedFile.name} (${selectedFile.size} bytes)`;
+            }
+        }
+
+        function handleDecryptFileSelect(input) {
+            if (input.files.length > 0) {
+                selectedDecryptFile = input.files[0];
+                document.getElementById('decryptFileLabel').textContent = `Selected: ${selectedDecryptFile.name} (${selectedDecryptFile.size} bytes)`;
+            }
+        }
+
+        async function encryptFile() {
+            if (!selectedFile) {
+                alert('Please select a file');
+                return;
+            }
+
+            const password = document.getElementById('encryptFilePassword').value;
+            const recipientsStr = document.getElementById('encryptFileRecipients').value;
+
+            if (!password && !recipientsStr) {
+                alert('Please provide either a password or recipients');
+                return;
+            }
+
+            const result = document.getElementById('encryptFileResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            const fileData = await selectedFile.arrayBuffer();
+            const base64Data = btoa(String.fromCharCode(...new Uint8Array(fileData)));
+
+            const body = {
+                filename: selectedFile.name,
+                data: base64Data,
+                pqc: document.getElementById('encryptFilePqc').checked
+            };
+
+            if (password) {
+                body.password = password;
+            } else {
+                body.recipients = recipientsStr.split(',').map(s => s.trim()).filter(s => s);
+            }
+
+            try {
+                const resp = await fetch('/api/encrypt/file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    // Create download link
+                    const blob = new Blob([data.data.encrypted], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    result.innerHTML = `
+                        <div class="result success">
+                            <strong>File encrypted (${data.data.size} bytes)</strong><br>
+                            <a href="${url}" download="${selectedFile.name}.enc" style="color: var(--accent)">Download Encrypted File</a>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function decryptFile() {
+            if (!selectedDecryptFile) {
+                alert('Please select a file');
+                return;
+            }
+
+            const password = document.getElementById('decryptFilePassword').value;
+            const recipient = document.getElementById('decryptFileRecipient').value;
+
+            if (!password && !recipient) {
+                alert('Please provide either a password or your key name');
+                return;
+            }
+
+            const result = document.getElementById('decryptFileResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            const fileText = await selectedDecryptFile.text();
+
+            const body = { encrypted: fileText.trim() };
+            if (password) {
+                body.password = password;
+            } else {
+                body.recipient = recipient;
+            }
+
+            try {
+                const resp = await fetch('/api/decrypt/file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    // Convert base64 back to binary
+                    const binaryString = atob(data.data.data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const blob = new Blob([bytes]);
+                    const url = URL.createObjectURL(blob);
+
+                    let filename = selectedDecryptFile.name.replace('.enc', '');
+                    if (filename === selectedDecryptFile.name) {
+                        filename = 'decrypted_' + filename;
+                    }
+
+                    result.innerHTML = `
+                        <div class="result success">
+                            <strong>File decrypted (${data.data.size} bytes)</strong><br>
+                            <a href="${url}" download="${filename}" style="color: var(--accent)">Download Decrypted File</a>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function signData() {
+            const data = document.getElementById('signData').value;
+            const keyName = document.getElementById('signKeyName').value;
+
+            if (!data || !keyName) {
+                alert('Please enter data and key name');
+                return;
+            }
+
+            const result = document.getElementById('signResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            const base64Data = btoa(data);
+
+            try {
+                const resp = await fetch('/api/sign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data: base64Data,
+                        key_name: keyName
+                    })
+                });
+                const respData = await resp.json();
+                if (respData.success) {
+                    result.innerHTML = `
+                        <div class="result success">
+                            <strong>Signed Data (Dilithium-5):</strong><br>
+                            ${respData.data.signed}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${respData.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function verifySignature() {
+            const signed = document.getElementById('verifyData').value;
+            const signer = document.getElementById('verifySignerName').value;
+
+            if (!signed || !signer) {
+                alert('Please enter signed data and signer name');
+                return;
+            }
+
+            const result = document.getElementById('verifyResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            try {
+                const resp = await fetch('/api/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        signed: signed,
+                        signer: signer
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    if (data.data.valid) {
+                        const originalData = atob(data.data.data);
+                        result.innerHTML = `
+                            <div class="result success">
+                                <strong>SIGNATURE VALID</strong><br>
+                                Original Data: ${originalData}
+                            </div>
+                        `;
+                    } else {
+                        result.innerHTML = `<div class="result error">SIGNATURE INVALID</div>`;
+                    }
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function analyzeStegoCapacity(input) {
+            if (input.files.length === 0) return;
+
+            const file = input.files[0];
+            const result = document.getElementById('stegoCapacityResult');
+            result.innerHTML = '<div class="loading"></div>';
+
+            const fileData = await file.arrayBuffer();
+            const base64Data = btoa(String.fromCharCode(...new Uint8Array(fileData)));
+
+            try {
+                const resp = await fetch('/api/stego/capacity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_data: base64Data })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="result success">
+                            <strong>Image Analysis:</strong><br>
+                            Dimensions: ${data.data.width} x ${data.data.height}<br>
+                            Capacity: ${data.data.capacity_bytes.toLocaleString()} bytes<br>
+                            (~${(data.data.capacity_bytes / 1024).toFixed(2)} KB)
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">Error: ${e.message}</div>`;
+            }
+        }
+
+        // Initialize
+        loadStatus();
+        loadConfig();
+        loadKeys();
+        loadArchivedKeys();
+    </script>
+</body>
+</html>

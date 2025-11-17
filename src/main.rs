@@ -387,6 +387,12 @@ enum Commands {
         #[arg(long, help = "Perform full analysis including detection")]
         analyze: bool,
     },
+
+    #[command(about = "Start web UI server")]
+    WebUi {
+        #[arg(short, long, default_value = "8080", help = "Port to listen on")]
+        port: u16,
+    },
 }
 
 fn main() -> Result<()> {
@@ -631,6 +637,11 @@ fn main() -> Result<()> {
             analyze,
         } => {
             commands::stego_capacity::execute(&image_path, analyze)?;
+        }
+        Commands::WebUi { port } => {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| hermes::error::HermesError::ConfigError(e.to_string()))?;
+            rt.block_on(hermes::web::start_server(port))?;
         }
     }
 

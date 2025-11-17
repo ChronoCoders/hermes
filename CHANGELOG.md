@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-11-17
+
+### Added
+- 🌐 **Web User Interface**
+  - Full-featured web UI accessible via browser at `http://localhost:8080`
+  - `hermes web-ui` - Start the web server (default port 8080)
+  - `hermes web-ui --port 3000` - Specify custom port
+  - Dark theme with military-grade aesthetic
+  - Real-time status monitoring (version, keys count, recipients)
+
+### Web UI Features
+- **Dashboard**: System status and configuration overview
+- **Key Management**:
+  - Generate new RSA/Kyber/Dilithium keypairs
+  - Rotate existing keys with archiving
+  - View all keys with fingerprints and capabilities
+  - List archived keys from rotations
+- **Message Encryption/Decryption**:
+  - Password-based encryption
+  - Recipient-based (multi-party) encryption
+  - Base64 output for easy sharing
+- **File Encryption/Decryption**:
+  - Drag-and-drop file upload
+  - Support for PQC (Post-Quantum) encryption
+  - Download encrypted/decrypted files
+- **Digital Signatures**:
+  - Sign data with Dilithium-5 (post-quantum)
+  - Verify signatures and extract original data
+- **Steganography Analysis**:
+  - Check image capacity for hidden data
+  - View image dimensions and byte capacity
+
+### Technical Stack
+- **Backend**: Axum 0.7 async web framework
+- **Runtime**: Tokio async runtime
+- **Frontend**: Embedded single-page application (SPA)
+- **CORS**: Full cross-origin support
+- **File Size**: Up to 100MB file uploads
+
+### Usage
+```bash
+# Start web UI on default port (8080)
+hermes web-ui
+
+# Start on custom port
+hermes web-ui -p 3000
+
+# Access in browser
+open http://localhost:8080
+```
+
+### API Endpoints
+- `GET /api/status` - System status
+- `GET /api/config` - Configuration paths
+- `GET /api/keys` - List all keys
+- `POST /api/keys/generate` - Generate new keypair
+- `POST /api/keys/rotate` - Rotate existing key
+- `GET /api/keys/archived` - List archived keys
+- `POST /api/encrypt/message` - Encrypt text message
+- `POST /api/decrypt/message` - Decrypt text message
+- `POST /api/encrypt/file` - Encrypt file data
+- `POST /api/decrypt/file` - Decrypt file data
+- `POST /api/sign` - Sign data with Dilithium
+- `POST /api/verify` - Verify signature
+- `POST /api/stego/capacity` - Check image capacity
+
 ## [2.3.0] - 2025-11-17
 
 ### Added
@@ -298,6 +364,7 @@ hermes share-verify alice_share_1.json
 - Message encryption/decryption
 - File encryption/decryption
 
+[2.4.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.4.0
 [2.3.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.3.0
 [2.2.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.2.0
 [2.1.0]: https://github.com/ChronoCoders/hermes/releases/tag/v2.1.0
