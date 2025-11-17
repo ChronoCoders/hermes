@@ -24,4 +24,6 @@ pub mod send_file;
 pub mod send_file_chunked;
 pub mod send_msg;
 pub mod share_verify;
+pub mod sign_file;
 pub mod validate;
+pub mod verify_signature;
