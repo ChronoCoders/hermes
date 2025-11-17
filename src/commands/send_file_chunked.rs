@@ -77,6 +77,7 @@ pub fn execute(
                 Some(chunk.encrypted_path.clone()),
                 ttl_hours,
                 Some(recips.clone()),
+                false,
             )?
         } else if let Some(pwd) = password {
             crypto::encrypt_data(
@@ -112,6 +113,7 @@ pub fn execute(
             Some(format!("{filename}.manifest")),
             ttl_hours,
             Some(recips.clone()),
+            false,
         )?
     } else if let Some(pwd) = password {
         crypto::encrypt_data(

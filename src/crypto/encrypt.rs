@@ -10,14 +10,16 @@ use sha2::{Digest, Sha256};
 use std::io::Write;
 
 const MAGIC_BYTES: &[u8; 4] = b"HRMS";
-const VERSION: u8 = 0x01;
+const VERSION: u8 = 0x02; // v2.0.0 with PQC support
 const FLAG_COMPRESSED: u8 = 0b00000001;
 const FLAG_MULTI_RECIPIENT: u8 = 0b00000010;
+const FLAG_PQC_ENABLED: u8 = 0b00000100;
 
 #[derive(Clone)]
 pub struct RecipientKey {
     pub name: String,
     pub encrypted_key: Vec<u8>,
+    pub pq_encrypted_key: Option<Vec<u8>>, // Kyber-encrypted key for hybrid mode
 }
 
 pub struct EncryptedPackage {
@@ -66,6 +68,16 @@ impl EncryptedPackage {
             bytes.extend_from_slice(name_bytes);
             bytes.extend_from_slice(&(recipient.encrypted_key.len() as u16).to_le_bytes());
             bytes.extend_from_slice(&recipient.encrypted_key);
+
+            // v2.0.0: Include PQC encrypted key if present
+            if self.version >= 0x02 {
+                if let Some(ref pq_key) = recipient.pq_encrypted_key {
+                    bytes.extend_from_slice(&(pq_key.len() as u16).to_le_bytes());
+                    bytes.extend_from_slice(pq_key);
+                } else {
+                    bytes.extend_from_slice(&0u16.to_le_bytes());
+                }
+            }
         }
 
         bytes.extend_from_slice(&(self.ciphertext.len() as u32).to_le_bytes());
@@ -199,9 +211,33 @@ impl EncryptedPackage {
             let encrypted_key = bytes[pos..pos + key_len].to_vec();
             pos += key_len;
 
+            // v2.0.0: Read PQC encrypted key if version >= 0x02
+            let pq_encrypted_key = if version >= 0x02 {
+                if pos + 2 > bytes.len() {
+                    return Err(HermesError::DecryptionFailed);
+                }
+
+                let pq_key_len = u16::from_le_bytes([bytes[pos], bytes[pos + 1]]) as usize;
+                pos += 2;
+
+                if pq_key_len > 0 {
+                    if pos + pq_key_len > bytes.len() {
+                        return Err(HermesError::DecryptionFailed);
+                    }
+                    let pq_key = bytes[pos..pos + pq_key_len].to_vec();
+                    pos += pq_key_len;
+                    Some(pq_key)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
             recipients.push(RecipientKey {
                 name,
                 encrypted_key,
+                pq_encrypted_key,
             });
         }
 
@@ -289,7 +325,7 @@ impl EncryptedPackage {
 
         Ok(EncryptedPackage {
             magic: *MAGIC_BYTES,
-            version: VERSION,
+            version: 0x01, // JSON format is legacy v1
             flags,
             salt,
             nonce,
@@ -323,6 +359,11 @@ impl EncryptedPackage {
             .as_secs();
         now > self.expires_at
     }
+
+    #[must_use]
+    pub fn is_pqc_enabled(&self) -> bool {
+        (self.flags & FLAG_PQC_ENABLED) != 0
+    }
 }
 
 pub fn encrypt_data(
@@ -331,7 +372,7 @@ pub fn encrypt_data(
     filename: Option<String>,
     ttl_hours: Option<u64>,
 ) -> Result<Vec<u8>> {
-    encrypt_data_multi(plaintext, Some(password), filename, ttl_hours, None)
+    encrypt_data_multi(plaintext, Some(password), filename, ttl_hours, None, false)
 }
 
 pub fn encrypt_data_multi(
@@ -340,6 +381,7 @@ pub fn encrypt_data_multi(
     filename: Option<String>,
     ttl_hours: Option<u64>,
     recipient_names: Option<Vec<String>>,
+    use_pqc: bool,
 ) -> Result<Vec<u8>> {
     let mut data_key = [0u8; 32];
     let mut flags = 0u8;
@@ -351,6 +393,10 @@ pub fn encrypt_data_multi(
 
         salt = vec![0u8; 0];
         flags |= FLAG_MULTI_RECIPIENT;
+
+        if use_pqc {
+            flags |= FLAG_PQC_ENABLED;
+        }
 
         let recipients_dir = dirs::home_dir()
             .ok_or_else(|| HermesError::ConfigError("Could not find home directory".to_string()))?
@@ -370,9 +416,26 @@ pub fn encrypt_data_multi(
             let public_key = crate::crypto::load_public_key(pubkey_path.to_str().unwrap())?;
             let encrypted_key = crate::crypto::encrypt_key_for_recipient(&data_key, &public_key)?;
 
+            // Hybrid encryption: Also encrypt with Kyber if PQC is enabled
+            let pq_encrypted_key = if use_pqc {
+                let kyber_pubkey_path = recipients_dir.join(format!("{name}_kyber.pub"));
+                if !kyber_pubkey_path.exists() {
+                    return Err(HermesError::ConfigError(format!(
+                        "Kyber public key not found for recipient: {name}. Generate PQC keys with --pqc flag"
+                    )));
+                }
+
+                let kyber_key = crate::crypto::load_kyber_public_key(kyber_pubkey_path.to_str().unwrap())?;
+                let pq_encrypted = crate::crypto::encrypt_with_kyber(&data_key, &kyber_key)?;
+                Some(pq_encrypted)
+            } else {
+                None
+            };
+
             recipient_list.push(RecipientKey {
                 name,
                 encrypted_key,
+                pq_encrypted_key,
             });
         }
 
@@ -467,4 +530,170 @@ fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
     let mut key = [0u8; 32];
     key.copy_from_slice(&bytes[..32]);
     Ok(key)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encrypt_decrypt_password() {
+        let plaintext = b"Hello, Hermes v2.0.0!";
+        let password = "test_password_123";
+
+        let encrypted = encrypt_data(plaintext, password, None, None).unwrap();
+        let package = EncryptedPackage::from_bytes(&encrypted).unwrap();
+
+        assert_eq!(package.version, 0x02);
+        assert!(!package.is_pqc_enabled());
+        assert!(!package.is_multi_recipient());
+    }
+
+    #[test]
+    fn test_package_serialization_v2() {
+        let package = EncryptedPackage {
+            magic: *MAGIC_BYTES,
+            version: VERSION,
+            flags: FLAG_MULTI_RECIPIENT | FLAG_PQC_ENABLED,
+            salt: vec![],
+            nonce: [0u8; 12],
+            checksum: [0u8; 32],
+            original_size: 100,
+            expires_at: 0,
+            filename: Some("test.txt".to_string()),
+            recipients: vec![
+                RecipientKey {
+                    name: "alice".to_string(),
+                    encrypted_key: vec![1, 2, 3, 4],
+                    pq_encrypted_key: Some(vec![5, 6, 7, 8]),
+                },
+                RecipientKey {
+                    name: "bob".to_string(),
+                    encrypted_key: vec![9, 10, 11, 12],
+                    pq_encrypted_key: Some(vec![13, 14, 15, 16]),
+                },
+            ],
+            ciphertext: vec![17, 18, 19, 20],
+        };
+
+        let bytes = package.to_bytes();
+        let recovered = EncryptedPackage::from_bytes(&bytes).unwrap();
+
+        assert_eq!(recovered.version, 0x02);
+        assert!(recovered.is_pqc_enabled());
+        assert!(recovered.is_multi_recipient());
+        assert_eq!(recovered.recipients.len(), 2);
+        assert_eq!(recovered.recipients[0].name, "alice");
+        assert_eq!(
+            recovered.recipients[0].pq_encrypted_key,
+            Some(vec![5, 6, 7, 8])
+        );
+        assert_eq!(recovered.recipients[1].name, "bob");
+        assert_eq!(
+            recovered.recipients[1].pq_encrypted_key,
+            Some(vec![13, 14, 15, 16])
+        );
+        assert_eq!(recovered.filename, Some("test.txt".to_string()));
+    }
+
+    #[test]
+    fn test_backward_compatibility_v1_package() {
+        // Simulate a v1.3.1 package (no PQC fields)
+        let mut bytes = Vec::new();
+
+        // Magic bytes
+        bytes.extend_from_slice(b"HRMS");
+        // Version 0x01 (v1.3.1)
+        bytes.push(0x01);
+        // Flags: multi-recipient
+        bytes.push(FLAG_MULTI_RECIPIENT);
+        // Salt length (0 for multi-recipient)
+        bytes.extend_from_slice(&0u16.to_le_bytes());
+        // Nonce
+        bytes.extend_from_slice(&[0u8; 12]);
+        // Checksum
+        bytes.extend_from_slice(&[0u8; 32]);
+        // Original size
+        bytes.extend_from_slice(&100u64.to_le_bytes());
+        // Expires at
+        bytes.extend_from_slice(&0u64.to_le_bytes());
+        // Filename length (0)
+        bytes.extend_from_slice(&0u16.to_le_bytes());
+        // Recipients count
+        bytes.extend_from_slice(&1u16.to_le_bytes());
+        // Recipient 1: name
+        let name = b"alice";
+        bytes.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        bytes.extend_from_slice(name);
+        // Recipient 1: encrypted key
+        let key = vec![1u8, 2, 3, 4];
+        bytes.extend_from_slice(&(key.len() as u16).to_le_bytes());
+        bytes.extend_from_slice(&key);
+        // Note: No PQC key for v1
+        // Ciphertext
+        let ciphertext = vec![17u8, 18, 19, 20];
+        bytes.extend_from_slice(&(ciphertext.len() as u32).to_le_bytes());
+        bytes.extend_from_slice(&ciphertext);
+
+        let package = EncryptedPackage::from_bytes(&bytes).unwrap();
+
+        assert_eq!(package.version, 0x01);
+        assert!(!package.is_pqc_enabled());
+        assert!(package.is_multi_recipient());
+        assert_eq!(package.recipients.len(), 1);
+        assert_eq!(package.recipients[0].name, "alice");
+        // PQC key should be None for v1 packages
+        assert_eq!(package.recipients[0].pq_encrypted_key, None);
+    }
+
+    #[test]
+    fn test_package_flags() {
+        let mut package = EncryptedPackage {
+            magic: *MAGIC_BYTES,
+            version: VERSION,
+            flags: 0,
+            salt: vec![],
+            nonce: [0u8; 12],
+            checksum: [0u8; 32],
+            original_size: 0,
+            expires_at: 0,
+            filename: None,
+            recipients: vec![],
+            ciphertext: vec![],
+        };
+
+        // Test no flags
+        assert!(!package.compressed());
+        assert!(!package.is_multi_recipient());
+        assert!(!package.is_pqc_enabled());
+
+        // Test compressed flag
+        package.flags = FLAG_COMPRESSED;
+        assert!(package.compressed());
+        assert!(!package.is_multi_recipient());
+        assert!(!package.is_pqc_enabled());
+
+        // Test multi-recipient flag
+        package.flags = FLAG_MULTI_RECIPIENT;
+        assert!(!package.compressed());
+        assert!(package.is_multi_recipient());
+        assert!(!package.is_pqc_enabled());
+
+        // Test PQC flag
+        package.flags = FLAG_PQC_ENABLED;
+        assert!(!package.compressed());
+        assert!(!package.is_multi_recipient());
+        assert!(package.is_pqc_enabled());
+
+        // Test all flags combined
+        package.flags = FLAG_COMPRESSED | FLAG_MULTI_RECIPIENT | FLAG_PQC_ENABLED;
+        assert!(package.compressed());
+        assert!(package.is_multi_recipient());
+        assert!(package.is_pqc_enabled());
+    }
+
+    #[test]
+    fn test_version_constant() {
+        assert_eq!(VERSION, 0x02);
+    }
 }

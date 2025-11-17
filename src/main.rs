@@ -42,6 +42,9 @@ enum Commands {
 
         #[arg(short, long, help = "Output directory for keys")]
         output: Option<String>,
+
+        #[arg(long, help = "Generate hybrid keypair with post-quantum Kyber")]
+        pqc: bool,
     },
 
     #[command(about = "Import recipient's public key")]
@@ -170,6 +173,9 @@ enum Commands {
 
         #[arg(long, help = "Dead Man's Switch timeout in hours")]
         dms: Option<u64>,
+
+        #[arg(long, help = "Use post-quantum hybrid encryption (requires PQC keys)")]
+        pqc: bool,
     },
 
     #[command(about = "Receive and decrypt a file")]
@@ -302,8 +308,8 @@ fn main() -> Result<()> {
         Commands::Validate { test_connection } => {
             commands::validate::execute(test_connection)?;
         }
-        Commands::Keygen { name, output } => {
-            commands::keygen::execute(&name, output.as_deref())?;
+        Commands::Keygen { name, output, pqc } => {
+            commands::keygen::execute(&name, output.as_deref(), pqc)?;
         }
         Commands::ImportPubkey { name, pubkey } => {
             commands::import_pubkey::execute(&name, &pubkey)?;
@@ -369,6 +375,7 @@ fn main() -> Result<()> {
             ttl,
             recipients,
             dms,
+            pqc,
         } => {
             commands::send_file::execute(
                 &file_path,
@@ -377,6 +384,7 @@ fn main() -> Result<()> {
                 ttl,
                 recipients,
                 dms,
+                pqc,
             )?;
         }
         Commands::RecvFile {
