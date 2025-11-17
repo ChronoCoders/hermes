@@ -9,3 +9,4 @@ pub mod shamir;
 pub mod steganography;
 pub mod transfer;
 pub mod ui;
+pub mod web;
