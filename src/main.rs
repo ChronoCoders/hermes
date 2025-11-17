@@ -45,6 +45,9 @@ enum Commands {
 
         #[arg(long, help = "Generate hybrid keypair with post-quantum Kyber")]
         pqc: bool,
+
+        #[arg(long, help = "Generate Dilithium signing keypair")]
+        sign: bool,
     },
 
     #[command(about = "Import recipient's public key")]
@@ -114,6 +117,30 @@ enum Commands {
     ShareVerify {
         #[arg(help = "Path to share file")]
         share_path: String,
+    },
+
+    #[command(about = "Sign a file with Dilithium (post-quantum signature)")]
+    SignFile {
+        #[arg(help = "Path to file to sign")]
+        file_path: String,
+
+        #[arg(short, long, help = "Your key name")]
+        key: String,
+
+        #[arg(short, long, help = "Output signature file path")]
+        output: Option<String>,
+    },
+
+    #[command(about = "Verify a Dilithium signature")]
+    VerifySignature {
+        #[arg(help = "Path to signed file")]
+        signed_file: String,
+
+        #[arg(short, long, help = "Signer's name")]
+        signer: String,
+
+        #[arg(short, long, help = "Extract original file to path")]
+        output: Option<String>,
     },
 
     #[command(about = "Check-in to prevent file deletion (Dead Man's Switch)")]
@@ -326,8 +353,13 @@ fn main() -> Result<()> {
         Commands::Validate { test_connection } => {
             commands::validate::execute(test_connection)?;
         }
-        Commands::Keygen { name, output, pqc } => {
-            commands::keygen::execute(&name, output.as_deref(), pqc)?;
+        Commands::Keygen {
+            name,
+            output,
+            pqc,
+            sign,
+        } => {
+            commands::keygen::execute(&name, output.as_deref(), pqc, sign)?;
         }
         Commands::ImportPubkey { name, pubkey } => {
             commands::import_pubkey::execute(&name, &pubkey)?;
@@ -357,6 +389,20 @@ fn main() -> Result<()> {
         }
         Commands::ShareVerify { share_path } => {
             commands::share_verify::execute(&share_path)?;
+        }
+        Commands::SignFile {
+            file_path,
+            key,
+            output,
+        } => {
+            commands::sign_file::execute(&file_path, &key, output.as_deref())?;
+        }
+        Commands::VerifySignature {
+            signed_file,
+            signer,
+            output,
+        } => {
+            commands::verify_signature::execute(&signed_file, &signer, output.as_deref())?;
         }
         Commands::Checkin { file_path } => {
             commands::checkin::execute(&file_path)?;

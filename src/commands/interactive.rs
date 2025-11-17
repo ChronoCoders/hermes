@@ -446,7 +446,7 @@ fn key_management_wizard() -> Result<()> {
                 .interact_text()?;
 
             println!();
-            commands::keygen::execute(&name, None, false)?;
+            commands::keygen::execute(&name, None, false, false)?;
         }
         1 => {
             let name: String = Input::with_theme(&ColorfulTheme::default())
