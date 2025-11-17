@@ -65,6 +65,24 @@ enum Commands {
         output: Option<String>,
     },
 
+    #[command(about = "Import recipient's Kyber (PQC) public key")]
+    ImportKyberPubkey {
+        #[arg(help = "Recipient name/identifier")]
+        name: String,
+
+        #[arg(help = "Path to Kyber public key file")]
+        pubkey: String,
+    },
+
+    #[command(about = "Export your Kyber (PQC) public key")]
+    ExportKyberPubkey {
+        #[arg(help = "Your keypair name")]
+        name: String,
+
+        #[arg(short, long, help = "Output file path")]
+        output: Option<String>,
+    },
+
     #[command(about = "List all RSA keys")]
     ListKeys,
 
@@ -316,6 +334,12 @@ fn main() -> Result<()> {
         }
         Commands::ExportPubkey { name, output } => {
             commands::export_pubkey::execute(&name, output.as_deref())?;
+        }
+        Commands::ImportKyberPubkey { name, pubkey } => {
+            commands::import_kyber_pubkey::execute(&name, &pubkey)?;
+        }
+        Commands::ExportKyberPubkey { name, output } => {
+            commands::export_kyber_pubkey::execute(&name, output.as_deref())?;
         }
         Commands::ListKeys => {
             commands::list_keys::execute()?;
