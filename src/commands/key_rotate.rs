@@ -6,7 +6,7 @@ use colored::Colorize;
 use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub fn execute(name: &str, archive: bool, generate_pqc: bool, generate_sign: bool) -> Result<()> {
     ui::print_box_start("KEY_ROTATE");
@@ -159,8 +159,8 @@ pub fn execute(name: &str, archive: bool, generate_pqc: bool, generate_sign: boo
 }
 
 fn archive_key_file(
-    source: &PathBuf,
-    archive_dir: &PathBuf,
+    source: &Path,
+    archive_dir: &Path,
     base_name: &str,
     extension: &str,
 ) -> Result<()> {
