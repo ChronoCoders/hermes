@@ -42,6 +42,12 @@ enum Commands {
 
         #[arg(short, long, help = "Output directory for keys")]
         output: Option<String>,
+
+        #[arg(long, help = "Generate hybrid keypair with post-quantum Kyber")]
+        pqc: bool,
+
+        #[arg(long, help = "Generate Dilithium signing keypair")]
+        sign: bool,
     },
 
     #[command(about = "Import recipient's public key")]
@@ -62,8 +68,98 @@ enum Commands {
         output: Option<String>,
     },
 
+    #[command(about = "Import recipient's Kyber (PQC) public key")]
+    ImportKyberPubkey {
+        #[arg(help = "Recipient name/identifier")]
+        name: String,
+
+        #[arg(help = "Path to Kyber public key file")]
+        pubkey: String,
+    },
+
+    #[command(about = "Export your Kyber (PQC) public key")]
+    ExportKyberPubkey {
+        #[arg(help = "Your keypair name")]
+        name: String,
+
+        #[arg(short, long, help = "Output file path")]
+        output: Option<String>,
+    },
+
     #[command(about = "List all RSA keys")]
     ListKeys,
+
+    #[command(about = "Split RSA private key into shares (Shamir's Secret Sharing)")]
+    KeySplit {
+        #[arg(help = "Path to private key file")]
+        name: String,
+
+        #[arg(short = 't', long, help = "Threshold (minimum shares needed to recover)")]
+        threshold: u8,
+
+        #[arg(short = 'n', long, help = "Total number of shares to create")]
+        shares: u8,
+
+        #[arg(short, long, help = "Output directory for shares")]
+        output: Option<String>,
+    },
+
+    #[command(about = "Recover RSA private key from shares")]
+    KeyRecover {
+        #[arg(help = "Paths to share files", required = true)]
+        share_paths: Vec<String>,
+
+        #[arg(short = 'n', long, help = "Output name for recovered key")]
+        name: String,
+    },
+
+    #[command(about = "Verify a share file's integrity")]
+    ShareVerify {
+        #[arg(help = "Path to share file")]
+        share_path: String,
+    },
+
+    #[command(about = "Rotate keypair (generate new keys, optionally archive old)")]
+    KeyRotate {
+        #[arg(help = "Key name to rotate")]
+        name: String,
+
+        #[arg(long, help = "Archive old keys before rotation")]
+        archive: bool,
+
+        #[arg(long, help = "Also rotate Kyber (PQC) keys")]
+        pqc: bool,
+
+        #[arg(long, help = "Also rotate Dilithium (signing) keys")]
+        sign: bool,
+    },
+
+    #[command(about = "List archived keys from previous rotations")]
+    ListArchivedKeys,
+
+    #[command(about = "Sign a file with Dilithium (post-quantum signature)")]
+    SignFile {
+        #[arg(help = "Path to file to sign")]
+        file_path: String,
+
+        #[arg(short, long, help = "Your key name")]
+        key: String,
+
+        #[arg(short, long, help = "Output signature file path")]
+        output: Option<String>,
+    },
+
+    #[command(about = "Verify a Dilithium signature")]
+    VerifySignature {
+        #[arg(help = "Path to signed file")]
+        signed_file: String,
+
+        #[arg(short, long, help = "Signer's name")]
+        signer: String,
+
+        #[arg(short, long, help = "Extract original file to path")]
+        output: Option<String>,
+    },
 
     #[command(about = "Check-in to prevent file deletion (Dead Man's Switch)")]
     Checkin {
@@ -140,6 +236,9 @@ enum Commands {
 
         #[arg(long, help = "Dead Man's Switch timeout in hours")]
         dms: Option<u64>,
+
+        #[arg(long, help = "Use post-quantum hybrid encryption (requires PQC keys)")]
+        pqc: bool,
     },
 
     #[command(about = "Receive and decrypt a file")]
@@ -246,6 +345,54 @@ enum Commands {
         #[arg(long, help = "Recipient name (for multi-recipient files)")]
         recipient: Option<String>,
     },
+
+    #[command(about = "Hide encrypted file data in an image (steganography)")]
+    StegoHide {
+        #[arg(help = "Path to file to hide")]
+        file_path: String,
+
+        #[arg(short, long, help = "Cover image path (PNG)")]
+        cover: String,
+
+        #[arg(short, long, help = "Output stego-image path")]
+        output: String,
+
+        #[arg(short, long, help = "Encryption password (if not using recipients)")]
+        password: Option<String>,
+
+        #[arg(long, value_delimiter = ',', help = "Recipients (comma-separated)")]
+        recipients: Option<Vec<String>>,
+    },
+
+    #[command(about = "Extract and decrypt hidden data from an image")]
+    StegoReveal {
+        #[arg(help = "Path to stego-image")]
+        stego_image: String,
+
+        #[arg(short, long, help = "Output file path")]
+        output: String,
+
+        #[arg(short, long, help = "Decryption password (if not using recipient key)")]
+        password: Option<String>,
+
+        #[arg(long, help = "Recipient name (for multi-recipient data)")]
+        recipient: Option<String>,
+    },
+
+    #[command(about = "Check image capacity for steganography")]
+    StegoCapacity {
+        #[arg(help = "Path to image")]
+        image_path: String,
+
+        #[arg(long, help = "Perform full analysis including detection")]
+        analyze: bool,
+    },
+
+    #[command(about = "Start web UI server")]
+    WebUi {
+        #[arg(short, long, default_value = "8080", help = "Port to listen on")]
+        port: u16,
+    },
 }
 
 fn main() -> Result<()> {
@@ -272,8 +419,13 @@ fn main() -> Result<()> {
         Commands::Validate { test_connection } => {
             commands::validate::execute(test_connection)?;
         }
-        Commands::Keygen { name, output } => {
-            commands::keygen::execute(&name, output.as_deref())?;
+        Commands::Keygen {
+            name,
+            output,
+            pqc,
+            sign,
+        } => {
+            commands::keygen::execute(&name, output.as_deref(), pqc, sign)?;
         }
         Commands::ImportPubkey { name, pubkey } => {
             commands::import_pubkey::execute(&name, &pubkey)?;
@@ -281,8 +433,53 @@ fn main() -> Result<()> {
         Commands::ExportPubkey { name, output } => {
             commands::export_pubkey::execute(&name, output.as_deref())?;
         }
+        Commands::ImportKyberPubkey { name, pubkey } => {
+            commands::import_kyber_pubkey::execute(&name, &pubkey)?;
+        }
+        Commands::ExportKyberPubkey { name, output } => {
+            commands::export_kyber_pubkey::execute(&name, output.as_deref())?;
+        }
         Commands::ListKeys => {
             commands::list_keys::execute()?;
+        }
+        Commands::KeySplit {
+            name,
+            threshold,
+            shares,
+            output,
+        } => {
+            commands::key_split::execute(&name, threshold, shares, output.as_deref())?;
+        }
+        Commands::KeyRecover { share_paths, name } => {
+            commands::key_recover::execute(share_paths, &name)?;
+        }
+        Commands::ShareVerify { share_path } => {
+            commands::share_verify::execute(&share_path)?;
+        }
+        Commands::KeyRotate {
+            name,
+            archive,
+            pqc,
+            sign,
+        } => {
+            commands::key_rotate::execute(&name, archive, pqc, sign)?;
+        }
+        Commands::ListArchivedKeys => {
+            commands::key_list_archived::execute()?;
+        }
+        Commands::SignFile {
+            file_path,
+            key,
+            output,
+        } => {
+            commands::sign_file::execute(&file_path, &key, output.as_deref())?;
+        }
+        Commands::VerifySignature {
+            signed_file,
+            signer,
+            output,
+        } => {
+            commands::verify_signature::execute(&signed_file, &signer, output.as_deref())?;
         }
         Commands::Checkin { file_path } => {
             commands::checkin::execute(&file_path)?;
@@ -325,6 +522,7 @@ fn main() -> Result<()> {
             ttl,
             recipients,
             dms,
+            pqc,
         } => {
             commands::send_file::execute(
                 &file_path,
@@ -333,6 +531,7 @@ fn main() -> Result<()> {
                 ttl,
                 recipients,
                 dms,
+                pqc,
             )?;
         }
         Commands::RecvFile {
@@ -404,6 +603,45 @@ fn main() -> Result<()> {
                 output.as_deref(),
                 recipient.as_deref(),
             )?;
+        }
+        Commands::StegoHide {
+            file_path,
+            cover,
+            output,
+            password,
+            recipients,
+        } => {
+            commands::stego_hide::execute(
+                &file_path,
+                &cover,
+                &output,
+                password.as_deref(),
+                recipients,
+            )?;
+        }
+        Commands::StegoReveal {
+            stego_image,
+            output,
+            password,
+            recipient,
+        } => {
+            commands::stego_reveal::execute(
+                &stego_image,
+                &output,
+                password.as_deref(),
+                recipient.as_deref(),
+            )?;
+        }
+        Commands::StegoCapacity {
+            image_path,
+            analyze,
+        } => {
+            commands::stego_capacity::execute(&image_path, analyze)?;
+        }
+        Commands::WebUi { port } => {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| hermes::error::HermesError::ConfigError(e.to_string()))?;
+            rt.block_on(hermes::web::start_server(port))?;
         }
     }
 

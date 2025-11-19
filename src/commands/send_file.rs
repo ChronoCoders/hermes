@@ -17,6 +17,7 @@ pub fn execute(
     ttl_hours: Option<u64>,
     recipients: Option<Vec<String>>,
     dms_hours: Option<u64>,
+    use_pqc: bool,
 ) -> Result<()> {
     let path = Path::new(file_path);
     if !path.exists() {
@@ -28,8 +29,12 @@ pub fn execute(
         .and_then(|n| n.to_str())
         .ok_or_else(|| HermesError::FileNotFound("Invalid filename".to_string()))?;
 
-    ui::print_box_start("ENCRYPT");
+    let title = if use_pqc { "ENCRYPT_PQC" } else { "ENCRYPT" };
+    ui::print_box_start(title);
     ui::print_box_line(&format!(">> File: {}", filename));
+    if use_pqc {
+        ui::print_box_line(">> Mode: Hybrid RSA + Kyber (Post-Quantum)");
+    }
     if let Some(hours) = dms_hours {
         ui::print_box_line(&format!(">> Dead Man's Switch: {} hours", hours));
     }
@@ -60,14 +65,23 @@ pub fn execute(
     spinner.set_message("Processing...".to_string());
 
     let encrypted = if let Some(recips) = recipients {
+        if use_pqc {
+            spinner.set_message("Encrypting with RSA + Kyber...".to_string());
+        }
         crypto::encrypt::encrypt_data_multi(
             &plaintext,
             None,
             Some(filename.to_string()),
             ttl_hours,
             Some(recips),
+            use_pqc,
         )?
     } else if let Some(pwd) = password {
+        if use_pqc {
+            return Err(HermesError::ConfigError(
+                "PQC mode requires recipients, not password".to_string(),
+            ));
+        }
         crypto::encrypt_data(&plaintext, pwd, Some(filename.to_string()), ttl_hours)?
     } else {
         return Err(HermesError::ConfigError(
