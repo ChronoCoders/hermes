@@ -36,7 +36,10 @@ fn print_directory(path: &str, label: &str) -> Result<()> {
 
             for entry in files {
                 let file_path = entry.path();
-                let file_name = file_path.file_name().unwrap().to_str().unwrap();
+                let file_name = match file_path.file_name().and_then(|n| n.to_str()) {
+                    Some(name) => name,
+                    None => continue, // Skip files with invalid names
+                };
 
                 if let Ok(metadata) = entry.metadata() {
                     let size_kb = metadata.len() as f64 / 1024.0;
@@ -51,18 +54,19 @@ fn print_directory(path: &str, label: &str) -> Result<()> {
                                 if package.is_expired() {
                                     status_info.push_str(&format!(" {}", "[EXPIRED]".red().bold()));
                                 } else if package.expires_at > 0 {
-                                    let now = std::time::SystemTime::now()
+                                    if let Ok(duration) = std::time::SystemTime::now()
                                         .duration_since(std::time::UNIX_EPOCH)
-                                        .unwrap()
-                                        .as_secs();
-                                    let remaining = (package.expires_at as i64 - now as i64) / 3600;
-                                    if remaining > 0 {
-                                        status_info.push_str(&format!(
-                                            " {}{}h",
-                                            "[⏰ ".yellow(),
-                                            remaining
-                                        ));
-                                        status_info.push_str(&"]".yellow().to_string());
+                                    {
+                                        let now = duration.as_secs();
+                                        let remaining = (package.expires_at as i64 - now as i64) / 3600;
+                                        if remaining > 0 {
+                                            status_info.push_str(&format!(
+                                                " {}{}h",
+                                                "[⏰ ".yellow(),
+                                                remaining
+                                            ));
+                                            status_info.push_str(&"]".yellow().to_string());
+                                        }
                                     }
                                 }
                             }
