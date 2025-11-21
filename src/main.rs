@@ -250,74 +250,48 @@ enum Commands {
 
 fn main() -> Result<()> {
     ui::print_banner();
-
     let cli = Cli::parse();
+    execute_command(cli.command)
+}
 
-    match cli.command {
-        Commands::Init => {
-            commands::init::execute()?;
-        }
-        Commands::Config => {
-            commands::config::execute()?;
-        }
-        Commands::List => {
-            commands::list::execute()?;
-        }
+fn execute_command(command: Commands) -> Result<()> {
+    match command {
+        Commands::Init => commands::init::execute(),
+        Commands::Config => commands::config::execute(),
+        Commands::List => commands::list::execute(),
         Commands::Completion { shell } => {
-            use clap::CommandFactory;
-            use clap_complete::generate;
-            let mut cmd = Cli::command();
-            generate(shell, &mut cmd, "hermes", &mut std::io::stdout());
+            generate_completion(shell);
+            Ok(())
         }
-        Commands::Validate { test_connection } => {
-            commands::validate::execute(test_connection)?;
-        }
-        Commands::Keygen { name, output } => {
-            commands::keygen::execute(&name, output.as_deref())?;
-        }
-        Commands::ImportPubkey { name, pubkey } => {
-            commands::import_pubkey::execute(&name, &pubkey)?;
-        }
+        Commands::Validate { test_connection } => commands::validate::execute(test_connection),
+        Commands::Keygen { name, output } => commands::keygen::execute(&name, output.as_deref()),
+        Commands::ImportPubkey { name, pubkey } => commands::import_pubkey::execute(&name, &pubkey),
         Commands::ExportPubkey { name, output } => {
-            commands::export_pubkey::execute(&name, output.as_deref())?;
+            commands::export_pubkey::execute(&name, output.as_deref())
         }
-        Commands::ListKeys => {
-            commands::list_keys::execute()?;
-        }
-        Commands::Checkin { file_path } => {
-            commands::checkin::execute(&file_path)?;
-        }
-        Commands::DmsStatus => {
-            commands::dms_status::execute()?;
-        }
-        Commands::DmsDisable { file_path } => {
-            commands::dms_disable::execute(&file_path)?;
-        }
-        Commands::Interactive => {
-            commands::interactive::execute()?;
-        }
+        Commands::ListKeys => commands::list_keys::execute(),
+        Commands::Checkin { file_path } => commands::checkin::execute(&file_path),
+        Commands::DmsStatus => commands::dms_status::execute(),
+        Commands::DmsDisable { file_path } => commands::dms_disable::execute(&file_path),
+        Commands::Interactive => commands::interactive::execute(),
         Commands::SendMsg {
             message,
             password,
             remote_path,
             ttl,
             recipients,
-        } => {
-            commands::send_msg::execute(
-                &message,
-                password.as_deref(),
-                remote_path.as_deref(),
-                ttl,
-                recipients,
-            )?;
-        }
+        } => commands::send_msg::execute(
+            &message,
+            password.as_deref(),
+            remote_path.as_deref(),
+            ttl,
+            recipients,
+        ),
         Commands::RecvMsg {
             remote_file,
             password,
             recipient,
-        } => {
-            commands::recv_msg::execute(&remote_file, password.as_deref(), recipient.as_deref())?;
-        }
+        } => commands::recv_msg::execute(&remote_file, password.as_deref(), recipient.as_deref()),
         Commands::SendFile {
             file_path,
             password,
@@ -325,87 +299,72 @@ fn main() -> Result<()> {
             ttl,
             recipients,
             dms,
-        } => {
-            commands::send_file::execute(
-                &file_path,
-                password.as_deref(),
-                remote_path.as_deref(),
-                ttl,
-                recipients,
-                dms,
-            )?;
-        }
+        } => commands::send_file::execute(
+            &file_path,
+            password.as_deref(),
+            remote_path.as_deref(),
+            ttl,
+            recipients,
+            dms,
+        ),
         Commands::RecvFile {
             remote_file,
             password,
             output,
             recipient,
-        } => {
-            commands::recv_file::execute(
-                &remote_file,
-                password.as_deref(),
-                output.as_deref(),
-                recipient.as_deref(),
-            )?;
-        }
+        } => commands::recv_file::execute(
+            &remote_file,
+            password.as_deref(),
+            output.as_deref(),
+            recipient.as_deref(),
+        ),
         Commands::SendFileChunked {
             file_path,
             password,
             ttl,
             recipients,
-        } => {
-            commands::send_file_chunked::execute(&file_path, password.as_deref(), ttl, recipients)?;
-        }
+        } => commands::send_file_chunked::execute(&file_path, password.as_deref(), ttl, recipients),
         Commands::RecvFileChunked {
             remote_manifest,
             password,
             output,
             recipient,
-        } => {
-            commands::recv_file_chunked::execute(
-                &remote_manifest,
-                password.as_deref(),
-                output.as_deref(),
-                recipient.as_deref(),
-            )?;
-        }
+        } => commands::recv_file_chunked::execute(
+            &remote_manifest,
+            password.as_deref(),
+            output.as_deref(),
+            recipient.as_deref(),
+        ),
         Commands::SendBatch {
             file_paths,
             password,
             ttl,
             recipients,
-        } => {
-            commands::send_batch::execute(file_paths, password.as_deref(), ttl, recipients)?;
-        }
+        } => commands::send_batch::execute(file_paths, password.as_deref(), ttl, recipients),
         Commands::SendDir {
             dir_path,
             password,
             recursive,
             ttl,
             recipients,
-        } => {
-            commands::send_dir::execute(
-                &dir_path,
-                password.as_deref(),
-                ttl,
-                recipients,
-                recursive,
-            )?;
-        }
+        } => commands::send_dir::execute(&dir_path, password.as_deref(), ttl, recipients, recursive),
         Commands::RecvBatch {
             remote_files,
             password,
             output,
             recipient,
-        } => {
-            commands::recv_batch::execute(
-                remote_files,
-                password.as_deref(),
-                output.as_deref(),
-                recipient.as_deref(),
-            )?;
-        }
+        } => commands::recv_batch::execute(
+            remote_files,
+            password.as_deref(),
+            output.as_deref(),
+            recipient.as_deref(),
+        ),
     }
+}
 
-    Ok(())
+fn generate_completion(shell: clap_complete::Shell) {
+    use clap::CommandFactory;
+    use clap_complete::generate;
+    let mut cmd = Cli::command();
+    generate(shell, &mut cmd, "hermes", &mut std::io::stdout());
 }
