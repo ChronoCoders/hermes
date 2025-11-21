@@ -35,7 +35,7 @@ impl ChunkManifest {
             total_size,
             chunk_size: CHUNK_SIZE,
             total_chunks,
-            file_hash: String::new(),
+            file_hash: String::default(),
             chunks: Vec::new(),
         }
     }
@@ -65,7 +65,7 @@ impl ChunkManifest {
 
     pub fn load_from_file(path: &Path) -> Result<Self> {
         let mut file = File::open(path)?;
-        let mut json = String::new();
+        let mut json = String::default();
         file.read_to_string(&mut json)?;
         Self::from_json(&json)
     }
