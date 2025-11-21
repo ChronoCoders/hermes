@@ -113,7 +113,7 @@ impl DmsRegistry {
         }
 
         let mut file = File::open(path)?;
-        let mut json = String::new();
+        let mut json = String::default();
         file.read_to_string(&mut json)?;
 
         serde_json::from_str(&json).map_err(HermesError::SerializationError)

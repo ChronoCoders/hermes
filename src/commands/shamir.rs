@@ -83,7 +83,7 @@ pub fn split_secret(secret: &[u8], threshold: u8, total_shares: u8) -> Result<Ve
                     total_shares,
                     x,
                     y: vec![y],
-                    checksum: String::new(),
+                    checksum: String::default(),
                 });
             } else {
                 shares[(share_id - 1) as usize].y.push(y);
