@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+const ENV_USERNAME: &str = "USERNAME";
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SftpConfig {
     pub host: String,
@@ -69,7 +71,7 @@ impl Settings {
 
     #[must_use]
     pub fn default_config() -> Self {
-        let username = std::env::var("USERNAME").unwrap_or_else(|_| "user".to_string());
+        let username = std::env::var(ENV_USERNAME).unwrap_or_else(|_| "user".to_string());
         let key_path = format!("C:\\Users\\{username}\\.ssh\\hermes_key");
 
         Self {
