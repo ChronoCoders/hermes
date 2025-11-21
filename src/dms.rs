@@ -133,7 +133,9 @@ impl DmsRegistry {
 
 impl Default for DmsRegistry {
     fn default() -> Self {
-        Self::new()
+        Self {
+            switches: HashMap::new(),
+        }
     }
 }
 
