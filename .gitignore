@@ -1,0 +1,37 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Hermes specific
+*.enc
+config.toml
+.hermes/
+hermes_vault/
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Test files
+test_*.txt
+secret*.txt
+classified*.txt
+*.pem
+*.pub
+
+# Backup files
+*.bak
+*.backup
