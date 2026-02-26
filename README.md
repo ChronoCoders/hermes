@@ -1,212 +1,119 @@
-# HERMES - Military-Grade Secure File Transfer System
+# Hermes
 
-[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Security](https://img.shields.io/badge/security-military--grade-brightgreen.svg)]()
+Hermes is a secure file transfer system engineered for confidential data exchange. It implements hybrid encryption (RSA-4096 + AES-256-GCM), integrity verification, and strict access control mechanisms.
 
-A command-line secure file transfer system with military-grade encryption, featuring hybrid RSA+AES encryption, self-destruct timers, and multi-recipient support.
+## Capabilities
 
-## 🎯 Features
+### Core Security Architecture
+*   **Hybrid Encryption**: Combines RSA-4096 for asymmetric key exchange and AES-256-GCM for symmetric content encryption.
+*   **Key Derivation**: Utilizes Argon2id for resistance against GPU-based brute-force attacks.
+*   **Integrity Verification**: Enforces SHA-256 checksum validation for all transferred payloads.
+*   **Protocol**: Custom binary protocol optimized for minimal overhead and strict structure enforcement.
 
-### 🔒 Core Security
-- **Hybrid Encryption**: RSA-4096 + AES-256-GCM
-- **Key Derivation**: Argon2 (memory-hard, resistant to GPU attacks)
-- **Integrity Verification**: SHA-256 checksums
-- **Custom Binary Protocol**: Efficient, compact file format
+### Access Control & Management
+*   **Multi-Recipient Support**: Encrypts unique session keys for multiple recipients using individual RSA public keys.
+*   **Identity Verification**: Fingerprint-based verification for public keys.
+*   **Expiration Policies**: Time-To-Live (TTL) enforcement for automatic data expiration.
+*   **Compression**: Automatic GZIP compression for optimized throughput.
 
-### 👥 Multi-Recipient Support
-- **RSA Public Key Encryption**: Send to multiple recipients
-- **Individual Key Management**: Each recipient uses their own private key
-- **Key Fingerprinting**: Verify recipient identities
-- **Backward Compatible**: Works with password-based encryption
+## Installation
 
-### ⏱️ Advanced Features
-- **Self-Destruct Timer**: Automatic expiration (TTL-based)
-- **Compression**: GZIP compression for files >1KB
-- **SFTP Integration**: Secure remote storage
-- **Custom Remote Paths**: Organize encrypted files
+### Build from Source
 
-### 🎨 User Experience
-- Beautiful CLI interface with colored output
-- Progress indicators for large operations
-- Detailed status messages
-- Cross-platform support (Windows, Linux, macOS)
-
-## 📦 Installation
-
-### From Source
+Requirements: Rust 1.70+
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/hermes.git
+git clone https://github.com/ChronoCoders/hermes.git
 cd hermes
-
-# Build release version
 cargo build --release
-
-# Install (optional)
-cargo install --path .
 ```
 
-## 🚀 Quick Start
+The compiled binary will be available at `target/release/hermes`.
 
-### 1. Initialize Configuration
+## Usage
+
+### Initialization
+
+Initialize the local configuration and storage paths:
 
 ```bash
 hermes init
 ```
 
-Edit `~/.config/hermes/config.toml` with your SFTP credentials.
-
-### 2. Password-Based Encryption (Simple)
-
-```bash
-# Encrypt and send a message
-hermes send-msg "Secret message" -p MySecurePassword123
-
-# Encrypt and send a file
-hermes send-file document.pdf -p MySecurePassword123
-
-# Decrypt a message
-hermes recv-msg msg_20250125_120000.enc -p MySecurePassword123
-
-# Decrypt a file
-hermes recv-file document_20250125_120000.enc -p MySecurePassword123
-```
-
-### 3. Multi-Recipient Encryption (Advanced)
-
-```bash
-# Generate your RSA keypair
-hermes keygen alice
-
-# Export your public key to share
-hermes export-pubkey alice -o alice_public.pem
-
-# Import recipient's public key
-hermes import-pubkey bob bob_public.pem
-
-# Send to multiple recipients
-hermes send-msg "Top secret" --recipients alice,bob,charlie
-hermes send-file document.pdf --recipients alice,bob
-
-# Decrypt with your private key
-hermes recv-msg msg_20250125_120000.enc --recipient alice
-hermes recv-file document_20250125_120000.enc --recipient alice
-```
-
-### 4. Self-Destruct Timer
-
-```bash
-# Message expires in 24 hours
-hermes send-msg "This will self-destruct" -p Pass123 -t 24
-
-# File expires in 48 hours
-hermes send-file secret.txt -p Pass123 -t 48
-
-# Multi-recipient with expiry
-hermes send-file classified.pdf --recipients alice,bob -t 72
-```
-
-## 📖 Commands
-
-### Configuration & Setup
-
-| Command | Description |
-|---------|-------------|
-| `hermes init` | Initialize Hermes configuration |
-| `hermes config` | Display current configuration |
-| `hermes list` | List all encrypted files with status |
+Configuration is stored in `~/.config/hermes/config.toml`.
 
 ### Key Management
 
-| Command | Description |
-|---------|-------------|
-| `hermes keygen <n>` | Generate RSA-4096 keypair |
-| `hermes export-pubkey <n> -o <file>` | Export public key |
-| `hermes import-pubkey <n> <file>` | Import recipient's public key |
-| `hermes list-keys` | List all keys and recipients |
+Generate a new RSA-4096 keypair:
 
-### Encryption & Decryption
-
-**Messages:**
 ```bash
-# Password-based
-hermes send-msg <message> -p <password> [-t <hours>]
-hermes recv-msg <file> -p <password>
-
-# Multi-recipient
-hermes send-msg <message> --recipients <name1,name2> [-t <hours>]
-hermes recv-msg <file> --recipient <n>
+hermes keygen <user_identifier>
 ```
 
-**Files:**
+Export a public key for distribution:
+
 ```bash
-# Password-based
-hermes send-file <path> -p <password> [-t <hours>]
-hermes recv-file <file> -p <password> [-o <output>]
-
-# Multi-recipient
-hermes send-file <path> --recipients <name1,name2> [-t <hours>]
-hermes recv-file <file> --recipient <n> [-o <output>]
+hermes export-pubkey <user_identifier> -o public_key.pem
 ```
 
-## 🔐 Security Details
+Import a recipient's public key:
 
-### Encryption Algorithm
-- **Symmetric**: AES-256-GCM (Galois/Counter Mode)
-- **Asymmetric**: RSA-4096 with PKCS#1 v1.5 padding
-- **Key Derivation**: Argon2id (default parameters)
-- **Random Generation**: OS-provided CSPRNG
-
-### Binary Protocol Format
-
-```
-[Magic: 4 bytes] "HRMS"
-[Version: 1 byte] 0x01
-[Flags: 1 byte] Compressed, Multi-recipient
-[Salt Length: 2 bytes]
-[Salt: variable]
-[Nonce: 12 bytes]
-[Checksum: 32 bytes] SHA-256
-[Original Size: 8 bytes]
-[Expires At: 8 bytes] Unix timestamp
-[Filename Length: 2 bytes]
-[Filename: variable]
-[Recipient Count: 2 bytes]
-  For each recipient:
-    [Name Length: 2 bytes]
-    [Name: variable]
-    [Encrypted Key Length: 2 bytes]
-    [Encrypted Key: ~512 bytes]
-[Ciphertext Length: 4 bytes]
-[Ciphertext: variable]
+```bash
+hermes import-pubkey <recipient_identifier> recipient_key.pem
 ```
 
-## 📝 Changelog
+### File Transfer
 
-### v1.0.0 (2025-01-25)
-- ✨ Multi-recipient RSA+AES hybrid encryption
-- ✨ Self-destruct timer (TTL-based expiration)
-- ✨ Custom binary protocol
-- ✨ RSA key management
-- ✨ GZIP compression
-- ✨ SHA-256 integrity verification
-- ✨ Backward compatibility with password-based encryption
+#### Encryption
 
-## 📄 License
+Send a file to specific recipients:
+
+```bash
+hermes send-file confidential.pdf --recipients alice,bob
+```
+
+Send a file with a 24-hour expiration policy:
+
+```bash
+hermes send-file data.archive --recipients alice -t 24
+```
+
+#### Decryption
+
+Decrypt a received file using your private key:
+
+```bash
+hermes recv-file encrypted_payload.enc --recipient <your_identifier>
+```
+
+## Technical Specifications
+
+### Cryptographic Standards
+*   **Symmetric Encryption**: AES-256-GCM
+*   **Asymmetric Encryption**: RSA-4096 (PKCS#1 v1.5 padding)
+*   **Key Derivation Function**: Argon2id
+*   **Random Number Generation**: OS-native CSPRNG
+
+### Protocol Structure
+
+The Hermes binary protocol adheres to the following structure:
+
+| Field | Size | Description |
+|-------|------|-------------|
+| Magic | 4 bytes | Protocol Identifier ("HRMS") |
+| Version | 1 byte | Protocol Version (0x01) |
+| Flags | 1 byte | Compression, Multi-recipient indicators |
+| Salt | Variable | Argon2id Salt |
+| Nonce | 12 bytes | AES-GCM Nonce |
+| Checksum | 32 bytes | SHA-256 Hash |
+| Metadata | Variable | Filename, Recipient List, Expiry |
+| Payload | Variable | Encrypted Content |
+
+## License
 
 This project is licensed under the MIT License.
 
-## ⚠️ Disclaimer
+## Contact
 
-This software is provided for educational and legitimate security purposes only.
-
-## 📧 Contact
-
-- Author: Altug Tatlisu
-- Email: contact@chronocoder.dev
-
----
-
-**⚡ Built with Rust 🦀 | Secured by Mathematics 🔢 | Protected by Design 🛡️**
+*   **Author**: Altug Tatlisu
+*   **Email**: contact@chronocoder.dev
