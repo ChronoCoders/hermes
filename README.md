@@ -174,11 +174,6 @@ host = "storage.example.com"
 port = 22
 username = "hermes"
 key_file = "~/.ssh/hermes_key"
-
-[paths]
-inbox   = "/home/user/.hermes/inbox"
-outbox  = "/home/user/.hermes/outbox"
-files   = "/home/user/.hermes/files"
 ```
 
 ## License
