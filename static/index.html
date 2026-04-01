@@ -602,17 +602,6 @@
                 <div class="card">
                     <div class="card-hd">
                         <div>
-                            <div class="card-title">Runtime Paths</div>
-                            <div class="card-sub">Resolved configuration directories</div>
-                        </div>
-                    </div>
-                    <div id="configInfo">
-                        <div class="info-row"><span class="info-k">Loading…</span></div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-hd">
-                        <div>
                             <div class="card-title">Encryption Suite</div>
                             <div class="card-sub">Active cryptographic algorithms</div>
                         </div>
@@ -938,19 +927,6 @@
         }
     }
 
-    async function loadConfig() {
-        try {
-            const resp = await fetch('/api/config');
-            const data = await resp.json();
-            if (data.success) {
-                const d = data.data;
-                document.getElementById('configInfo').innerHTML = [
-                    ['Home', d.home_dir], ['Keys', d.keys_dir],
-                    ['Recipients', d.recipients_dir], ['Config', d.config_file]
-                ].map(([k, v]) => `<div class="info-row"><span class="info-k">${k}</span><span class="info-v">${v}</span></div>`).join('');
-            }
-        } catch (e) {}
-    }
 
     // ── Keys ──────────────────────────────────────────────────────────────
     async function loadKeys() {
@@ -1194,7 +1170,6 @@
 
     // ── Init ──────────────────────────────────────────────────────────────
     loadStatus();
-    loadConfig();
     loadKeys();
     loadArchivedKeys();
 </script>
